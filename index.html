@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Buscador Maestro Honduras - Miller1313</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root { --blue: #004a99; --bg: #f4f7f9; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 20px; }
+        .container { max-width: 850px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
+        #status { padding: 12px; margin-bottom: 20px; border-radius: 8px; font-weight: bold; transition: 0.3s; }
+        .loading { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        .online { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        input { width: 100%; padding: 18px; border: 2px solid #ddd; border-radius: 12px; font-size: 18px; outline: none; box-sizing: border-box; }
+        input:focus { border-color: var(--blue); }
+        .card { text-align: left; background: #fff; border-left: 6px solid var(--blue); padding: 15px; margin-top: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .card strong { font-size: 1.2em; color: var(--blue); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🇭🇳 Buscador de Ubicaciones Oficial</h1>
+    <div id="status" class="loading">🛰️ Conectando con GitHub Miller1313...</div>
+    <input type="text" id="search" placeholder="Escriba barrio, aldea, municipio o depto..." onkeyup="filtrar()" disabled>
+    <div id="results"></div>
+</div>
+
+<script>
+    let db = [];
+    // URL directa a tu archivo en GitHub
+    const EXCEL_URL = "https://raw.githubusercontent.com/Miller1313/direccionesSLV/main/hnd_admin_boundaries.xlsx";
+
+    async function cargarDesdeNube() {
+        try {
+            const response = await fetch(EXCEL_URL);
+            if (!response.ok) throw new Error();
+            const data = await response.arrayBuffer();
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            // Leemos la pestaña hnd_populatedplaces que vi en tu imagen
+            const sheet = workbook.Sheets["hnd_populatedplaces"];
+            db = XLSX.utils.sheet_to_json(sheet).map(r => ({
+                l: r.featurename_es || "Desconocido",
+                m: r.adm2_es || "Desconocido",
+                d: r.adm1_es || "Desconocido"
+            }));
+
+            const status = document.getElementById('status');
+            status.innerText = `✅ ¡Conectado! ${db.length} ubicaciones de Honduras listas.`;
+            status.className = "online";
+            document.getElementById('search').disabled = false;
+            document.getElementById('search').focus();
+        } catch (e) {
+            document.getElementById('status').innerHTML = "❌ Error: No se pudo conectar con el Excel en GitHub.<br><small>Asegúrate de haber subido el archivo al repositorio 'direccionesSLV'.</small>";
+            document.getElementById('status').style.background = "#f8d7da";
+        }
+    }
+
+    cargarDesdeNube();
+
+    function filtrar() {
+        const q = document.getElementById('search').value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const resDiv = document.getElementById('results');
+        resDiv.innerHTML = '';
+        if(q.length < 2) return;
+
+        const encontrados = db.filter(i => 
+            i.l.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(q) ||
+            i.m.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(q)
+        ).slice(0, 40);
+
+        encontrados.forEach(item => {
+            resDiv.innerHTML += `
+                <div class="card">
+                    <strong>${item.l}</strong><br>
+                    <span>Municipio: ${item.m}</span><br>
+                    <small>Departamento: ${item.d}</small>
+                </div>`;
+        });
+    }
+</script>
+</body>
+</html>
