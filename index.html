@@ -2,31 +2,36 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Buscador Logístico Profesional HN</title>
+    <title>Buscador Logístico HN - Híbrido</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: white; padding: 20px; }
-        .container { max-width: 600px; margin: auto; }
+        body { font-family: 'Segoe UI', sans-serif; background: #121212; color: white; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 500px; }
         input { 
-            width: 100%; padding: 15px; border-radius: 10px; border: none; 
-            font-size: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            width: 100%; padding: 16px; border-radius: 12px; border: 2px solid #333; 
+            background: #1e1e1e; color: white; font-size: 18px; outline: none; box-sizing: border-box;
         }
-        .results { background: #2a2a2a; border-radius: 10px; margin-top: 10px; overflow: hidden; }
-        .item { 
-            padding: 15px; border-bottom: 1px solid #333; cursor: pointer; 
-            transition: 0.2s; 
-        }
-        .item:hover { background: #3a3a3a; }
+        input:focus { border-color: #4db8ff; }
+        .results { background: #1e1e1e; border-radius: 12px; margin-top: 10px; border: 1px solid #333; }
+        .item { padding: 15px; border-bottom: 1px solid #333; cursor: pointer; }
+        .item:hover { background: #252525; }
         .item strong { color: #4db8ff; display: block; }
-        .item small { color: #aaa; font-size: 12px; }
+        .google-rescue { 
+            display: block; padding: 15px; background: #4285F4; color: white; 
+            text-align: center; text-decoration: none; border-radius: 12px; margin-top: 10px; font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>🔎 Buscador Global Honduras</h2>
-    <p>Datos de OpenStreetMap (Incluye colonias, fincas y barrios)</p>
-    <input type="text" id="search" placeholder="Escribe: Finca, Colonia o Barrio..." onkeyup="buscar()">
+    <h2>🔎 Buscador Honduras Pro</h2>
+    <input type="text" id="search" placeholder="Ej: Barrio Las Acacias, SPS" onkeyup="buscar()">
+    
     <div id="results" class="results"></div>
+    
+    <a id="googleBtn" href="#" target="_blank" class="google-rescue" style="display:none;">
+        🚀 Abrir en Google Maps (Búsqueda Global)
+    </a>
 </div>
 
 <script>
@@ -34,29 +39,38 @@
     function buscar() {
         const query = document.getElementById('search').value;
         const resDiv = document.getElementById('results');
+        const gBtn = document.getElementById('googleBtn');
         
         clearTimeout(timer);
-        if (query.length < 3) { resDiv.innerHTML = ''; return; }
+        if (query.length < 3) { 
+            resDiv.innerHTML = ''; 
+            gBtn.style.display = 'none';
+            return; 
+        }
+
+        // Mostrar siempre el botón de Google Maps como respaldo
+        gBtn.style.display = 'block';
+        gBtn.href = `https://www.google.com/maps/search/${encodeURIComponent(query + " Honduras")}`;
 
         timer = setTimeout(() => {
-            // Photon es un motor de búsqueda masivo basado en OpenStreetMap
-            // Filtramos por latitud y longitud aproximada de Honduras para mayor precisión
-            const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&lat=14.1&lon=-87.2&limit=10`;
-
-            fetch(url)
+            fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&lat=15.5&lon=-88.0&limit=10`)
             .then(res => res.json())
             .then(data => {
                 resDiv.innerHTML = '';
-                data.features.forEach(f => {
+                const hnFeatures = data.features.filter(f => f.properties.countrycode === "HN" || f.properties.country === "Honduras");
+                
+                if (hnFeatures.length === 0) {
+                    resDiv.innerHTML = '<div class="item">⚠️ No hallado en base de datos local. Usa el botón azul de Google Maps arriba.</div>';
+                    return;
+                }
+
+                hnFeatures.forEach(f => {
                     const p = f.properties;
-                    // Solo mostramos si es en Honduras
-                    if (p.country === "Honduras" || p.countrycode === "HN") {
-                        resDiv.innerHTML += `
-                            <div class="item" onclick="window.open('https://www.google.com/maps/search/${encodeURIComponent(p.name + ', ' + (p.city || '') + ', Honduras')}')">
-                                <strong>${p.name || 'Sin nombre'}</strong>
-                                <small>${p.city || ''} ${p.state || ''} - ${p.district || p.suburb || 'Barrio/Colonia'}</small>
-                            </div>`;
-                    }
+                    resDiv.innerHTML += `
+                        <div class="item" onclick="window.open('https://www.google.com/maps/search/${encodeURIComponent(p.name + ' ' + (p.city || '') + ' Honduras')}')">
+                            <strong>${p.name}</strong>
+                            <small>${p.city || ''}, ${p.state || ''} - ${p.district || 'Zona'}</small>
+                        </div>`;
                 });
             });
         }, 300);
