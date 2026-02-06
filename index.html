@@ -2,74 +2,183 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Buscador Logístico HN - Híbrido</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador Logístico HN - Alpine Soft</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #121212; color: white; padding: 20px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 500px; }
-        input { 
-            width: 100%; padding: 16px; border-radius: 12px; border: 2px solid #333; 
-            background: #1e1e1e; color: white; font-size: 18px; outline: none; box-sizing: border-box;
+        :root {
+            --blue-sky: #70c4f4;    /* Nombres de Lugares (Más suave) */
+            --granite: #B7B8B6;     /* Texto secundario */
+            --pine: #34675C;        /* Bordes y Divisiones */
+            --soft-mint: #98FFD9;   /* El nuevo color: más claro y estético */
+            --bg-dark: #1a1a1a;     /* Fondo profundo */
+            --card-bg: #262626;     /* Fondo de tarjetas */
         }
-        input:focus { border-color: #4db8ff; }
-        .results { background: #1e1e1e; border-radius: 12px; margin-top: 10px; border: 1px solid #333; }
-        .item { padding: 15px; border-bottom: 1px solid #333; cursor: pointer; }
-        .item:hover { background: #252525; }
-        .item strong { color: #4db8ff; display: block; }
-        .google-rescue { 
-            display: block; padding: 15px; background: #4285F4; color: white; 
-            text-align: center; text-decoration: none; border-radius: 12px; margin-top: 10px; font-weight: bold;
+
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-dark);
+            color: white;
+            margin: 0; padding: 20px;
+            display: flex; justify-content: center;
+        }
+
+        .container { width: 100%; max-width: 520px; }
+
+        .header { text-align: center; margin-bottom: 25px; }
+        .header h1 { font-size: 24px; margin: 0; color: var(--blue-sky); font-weight: 800; letter-spacing: 1px; }
+        .header p { font-size: 13px; color: var(--soft-mint); font-weight: 600; margin-top: 5px; opacity: 0.9; }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 20px;
+            border-radius: 12px;
+            border: 2px solid var(--pine);
+            background: var(--card-bg);
+            color: white;
+            font-size: 18px;
+            box-sizing: border-box;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .search-input:focus {
+            border-color: var(--soft-mint);
+            box-shadow: 0 0 15px rgba(152, 255, 217, 0.15);
+        }
+
+        .results-list { margin-top: 20px; }
+
+        .location-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--pine);
+            transition: all 0.2s;
+        }
+        .location-card:hover { transform: translateY(-3px); border-bottom-color: var(--soft-mint); }
+
+        .info { cursor: pointer; flex: 1; }
+        .place-name { 
+            font-size: 19px; font-weight: 700; color: var(--blue-sky); 
+            display: block; margin-bottom: 6px; 
+        }
+
+        .detail-row { font-size: 13px; color: var(--granite); margin-bottom: 3px; }
+        .detail-row b { color: var(--soft-mint); font-weight: 600; }
+
+        .btn-coords {
+            background: var(--soft-mint);
+            color: #1a1a1a;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 900;
+            transition: 0.3s;
+            margin-left: 15px;
+            text-transform: uppercase;
+        }
+        .btn-coords:hover { background: white; transform: scale(1.05); }
+        .btn-coords.success { background: var(--blue-sky); color: white; }
+
+        .google-link {
+            display: block;
+            text-align: center;
+            padding: 15px;
+            color: var(--granite);
+            text-decoration: none;
+            border-radius: 12px;
+            border: 1px dashed var(--pine);
+            margin-top: 25px;
+            font-weight: 600;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>🔎 Buscador Honduras Pro</h2>
-    <input type="text" id="search" placeholder="Ej: Barrio Las Acacias, SPS" onkeyup="buscar()">
+    <div class="header">
+        <h1>🔍 Buscador HN Pro</h1>
+        <p>Logística y Ubicaciones de Precisión</p>
+    </div>
+
+    <input type="text" id="mainSearch" class="search-input" placeholder="Escribe 'galpa', 'acacias', 'cortes'..." onkeyup="processSearch()">
     
-    <div id="results" class="results"></div>
+    <div id="resultsContainer" class="results-list"></div>
     
-    <a id="googleBtn" href="#" target="_blank" class="google-rescue" style="display:none;">
-        🚀 Abrir en Google Maps (Búsqueda Global)
+    <a id="rescueBtn" href="#" target="_blank" class="google-link" style="display:none;">
+        📍 ¿No lo encuentras? Buscar en Google Maps
     </a>
 </div>
 
 <script>
-    let timer;
-    function buscar() {
-        const query = document.getElementById('search').value;
-        const resDiv = document.getElementById('results');
-        const gBtn = document.getElementById('googleBtn');
+    let searchTimer;
+
+    function copyToClipboard(btn, lat, lon) {
+        navigator.clipboard.writeText(`${lat}, ${lon}`).then(() => {
+            const oldText = btn.innerText;
+            btn.innerText = "COPIADO";
+            btn.classList.add('success');
+            setTimeout(() => {
+                btn.innerText = oldText;
+                btn.classList.remove('success');
+            }, 1000);
+        });
+    }
+
+    function processSearch() {
+        const val = document.getElementById('mainSearch').value;
+        const resultsArea = document.getElementById('resultsContainer');
+        const rescueBtn = document.getElementById('rescueBtn');
         
-        clearTimeout(timer);
-        if (query.length < 3) { 
-            resDiv.innerHTML = ''; 
-            gBtn.style.display = 'none';
-            return; 
-        }
+        clearTimeout(searchTimer);
+        if (val.length < 3) { resultsArea.innerHTML = ''; rescueBtn.style.display = 'none'; return; }
 
-        // Mostrar siempre el botón de Google Maps como respaldo
-        gBtn.style.display = 'block';
-        gBtn.href = `https://www.google.com/maps/search/${encodeURIComponent(query + " Honduras")}`;
+        rescueBtn.style.display = 'block';
+        rescueBtn.href = `https://www.google.com/maps/search/${encodeURIComponent(val + " Honduras")}`;
 
-        timer = setTimeout(() => {
-            fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&lat=15.5&lon=-88.0&limit=10`)
+        searchTimer = setTimeout(() => {
+            // Buscamos 100 resultados para atrapar a Tegucigalpa aunque se escriba 'galpa'
+            fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(val)}&limit=100`)
             .then(res => res.json())
             .then(data => {
-                resDiv.innerHTML = '';
-                const hnFeatures = data.features.filter(f => f.properties.countrycode === "HN" || f.properties.country === "Honduras");
+                resultsArea.innerHTML = '';
+                const term = val.toLowerCase();
                 
-                if (hnFeatures.length === 0) {
-                    resDiv.innerHTML = '<div class="item">⚠️ No hallado en base de datos local. Usa el botón azul de Google Maps arriba.</div>';
+                // Filtro para asegurar Honduras y búsqueda dentro del texto
+                const matches = data.features.filter(f => {
+                    const p = f.properties;
+                    const name = (p.name || "").toLowerCase();
+                    const city = (p.city || "").toLowerCase();
+                    const isHN = p.countrycode === "HN" || p.country === "Honduras";
+                    
+                    return isHN && (name.includes(term) || city.includes(term));
+                });
+
+                if (matches.length === 0) {
+                    resultsArea.innerHTML = '<div style="text-align:center; padding:20px; color:var(--granite);">Sin coincidencias.</div>';
                     return;
                 }
 
-                hnFeatures.forEach(f => {
+                matches.slice(0, 15).forEach(f => {
                     const p = f.properties;
-                    resDiv.innerHTML += `
-                        <div class="item" onclick="window.open('https://www.google.com/maps/search/${encodeURIComponent(p.name + ' ' + (p.city || '') + ' Honduras')}')">
-                            <strong>${p.name}</strong>
-                            <small>${p.city || ''}, ${p.state || ''} - ${p.district || 'Zona'}</small>
+                    const c = f.geometry.coordinates;
+                    const depto = p.state || "Honduras";
+                    const mun = p.city || p.county || "Ver Mapa";
+
+                    resultsArea.innerHTML += `
+                        <div class="location-card">
+                            <div class="info" onclick="window.open('https://www.google.com/maps/search/${encodeURIComponent(p.name + ' ' + mun + ' Honduras')}')">
+                                <span class="place-name">${p.name}</span>
+                                <div class="detail-row"><b>Depto:</b> ${depto}</div>
+                                <div class="detail-row"><b>Mun:</b> ${mun}</div>
+                            </div>
+                            <button class="btn-coords" onclick="event.stopPropagation(); copyToClipboard(this, ${c[1]}, ${c[0]})">📍 Coords</button>
                         </div>`;
                 });
             });
