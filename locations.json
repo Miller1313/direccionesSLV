@@ -8,5 +8,18 @@
     "type": "colonia",
     "added": "2024-01-01T00:00:00.000Z",
     "source": "official"
+  },
+  "prueba": {
+    "name": "Prueba",
+    "lat": 15.5,
+    "lon": -88.0,
+    "municipio": "Test",
+    "departamento": "Test",
+    "type": "colonia",
+    "added": "2026-02-07T19:53:59.092420",
+    "approved": true,
+    "source": "user_submission",
+    "detected_automatically": true,
+    "full_address": "Test"
   }
 }
