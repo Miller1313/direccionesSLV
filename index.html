@@ -1369,7 +1369,7 @@ async function sendToTelegram(locationData) {
         };
         
         // Método 1: Intentar enviar a través de Render
-        if (RENDER_APP_URL && RENDER_APP_URL !== 'https://tu-app-en-render.onrender.com') {
+        if (RENDER_APP_URL && RENDER_APP_URL !== 'https://direccionesslv-izev.onrender.com/') {
             try {
                 const response = await fetch(`${RENDER_APP_URL}/send-notification`, {
                     method: 'POST',
