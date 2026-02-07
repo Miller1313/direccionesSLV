@@ -25,6 +25,7 @@ def telegram_webhook():
     """Webhook para Telegram"""
     data = request.json
     
+    # Manejar mensajes de texto
     if 'message' in data:
         message = data['message']['text']
         chat_id = data['message']['chat']['id']
@@ -33,22 +34,52 @@ def telegram_webhook():
         if message == '/start':
             send_telegram(chat_id, 
                 "🤖 *Bot de Aprobación Honduras*\n\n"
-                "Enviaré solicitudes de nuevas ubicaciones.\n"
-                "Responde:\n"
-                "✅ aprobar - Para agregar a GitHub\n"
-                "❌ rechazar - Para descartar")
+                "Enviaré solicitudes de nuevas ubicaciones.\n\n"
+                "Comandos:\n"
+                "/lista - Ver solicitudes pendientes\n"
+                "/ayuda - Mostrar ayuda")
         
-        # Si es aprobación
-        elif '✅ aprobar' in message:
-            handle_approval(chat_id)
+        elif message == '/lista' or message == '/list':
+            show_pending_requests(chat_id)
         
-        # Si es rechazo
-        elif '❌ rechazar' in message:
-            handle_rejection(chat_id)
+        elif message == '/ayuda' or message == '/help':
+            send_telegram(chat_id,
+                "📋 *Ayuda del Bot*\n\n"
+                "*Comandos:*\n"
+                "/start - Iniciar bot\n"
+                "/lista - Ver solicitudes pendientes\n"
+                "/ayuda - Mostrar este mensaje\n\n"
+                "*Uso:*\n"
+                "1. El bot recibe solicitudes del formulario web\n"
+                "2. Aparecerán con botones para aprobar/rechazar\n"
+                "3. Usa los botones para gestionar las solicitudes")
         
-        # Si es una solicitud
+        # Si es una solicitud (texto plano) - compatibilidad con versión anterior
         elif 'NUEVA SOLICITUD' in message:
-            handle_new_request(message, chat_id)
+            handle_new_request_legacy(message, chat_id)
+    
+    # Manejar botones inline (callback_query)
+    elif 'callback_query' in data:
+        callback = data['callback_query']
+        chat_id = callback['message']['chat']['id']
+        message_id = callback['message']['message_id']
+        callback_data = callback['data']
+        
+        # Responder al callback (quitar "loading" en Telegram)
+        answer_callback_query(callback['id'])
+        
+        # Procesar las acciones
+        if callback_data.startswith('approve_'):
+            request_id = callback_data.split('_')[1]
+            handle_approval_button(request_id, chat_id, message_id)
+            
+        elif callback_data.startswith('reject_'):
+            request_id = callback_data.split('_')[1]
+            handle_rejection_button(request_id, chat_id, message_id)
+            
+        elif callback_data.startswith('copy_'):
+            request_id = callback_data.split('_')[1]
+            handle_copy_coords(request_id, callback['id'])
     
     return jsonify({"status": "ok"})
 
@@ -70,6 +101,15 @@ def send_notification():
         'chat_id': chat_id
     }
     
+    # Crear URL para Google Maps
+    try:
+        coords = location['coords'].split(',')
+        lat = coords[0].strip()
+        lon = coords[1].strip()
+        maps_url = f"https://www.google.com/maps?q={lat},{lon}"
+    except:
+        maps_url = f"https://www.google.com/maps/search/{location['name']}"
+    
     # Crear mensaje para Telegram
     message = f"""📍 *NUEVA SOLICITUD DE DIRECCIÓN*
 
@@ -79,16 +119,40 @@ def send_notification():
 *Departamento:* {location.get('departamento', 'No especificado')}
 *Tipo:* {location.get('type', 'colonia')}
 
-*ID:* `{request_id}`
+*Detectado:* {location.get('detected', 'No disponible')}
 
-Para aprobar, responde:
-✅ aprobar_{request_id}
+*🆔 ID:* `{request_id}`"""
 
-Para rechazar:
-❌ rechazar_{request_id}"""
+    # Crear teclado inline con botones
+    keyboard = {
+        "inline_keyboard": [
+            [
+                {
+                    "text": "✅ Aprobar",
+                    "callback_data": f"approve_{request_id}"
+                },
+                {
+                    "text": "❌ Rechazar", 
+                    "callback_data": f"reject_{request_id}"
+                }
+            ],
+            [
+                {
+                    "text": "🗺️ Ver en Google Maps",
+                    "url": maps_url
+                }
+            ],
+            [
+                {
+                    "text": "📋 Copiar coordenadas",
+                    "callback_data": f"copy_{request_id}"
+                }
+            ]
+        ]
+    }
     
-    # Enviar a Telegram
-    success = send_telegram(chat_id, message)
+    # Enviar a Telegram con botones
+    success = send_telegram(chat_id, message, keyboard)
     
     if success:
         return jsonify({"success": True, "request_id": request_id})
@@ -111,30 +175,55 @@ def approve_route(request_id):
     
     return "❌ Solicitud no encontrada o ya procesada"
 
-def handle_approval(chat_id):
-    """Manejar aprobación desde Telegram"""
-    # Buscar solicitud pendiente para este chat
-    for req_id, data in pending_requests.items():
-        if data['chat_id'] == chat_id:
-            success = update_github(data['location'])
+def handle_approval_button(request_id, chat_id, message_id):
+    """Manejar aprobación desde botón"""
+    if request_id in pending_requests:
+        data = pending_requests[request_id]
+        success = update_github(data['location'])
+        
+        if success:
+            # Editar mensaje original para mostrar aprobado
+            edit_message(chat_id, message_id, 
+                        f"✅ *APROBADO*\n\n"
+                        f"*{data['location']['name']}* ha sido agregada a GitHub!")
             
-            if success:
-                send_telegram(chat_id, f"✅ *{data['location']['name']}* aprobada y agregada a GitHub!")
-                del pending_requests[req_id]
-            else:
-                send_telegram(chat_id, "❌ Error al actualizar GitHub")
-            break
+            # Enviar confirmación adicional
+            send_telegram(chat_id, f"✅ *{data['location']['name']}* aprobada y agregada a GitHub!")
+            
+            del pending_requests[request_id]
+        else:
+            edit_message(chat_id, message_id, "❌ Error al actualizar GitHub")
+            answer_callback_query(chat_id, "❌ Error al actualizar GitHub")
+    else:
+        edit_message(chat_id, message_id, "❌ Solicitud no encontrada o ya procesada")
 
-def handle_rejection(chat_id):
-    """Manejar rechazo desde Telegram"""
-    for req_id, data in pending_requests.items():
-        if data['chat_id'] == chat_id:
-            send_telegram(chat_id, f"❌ *{data['location']['name']}* rechazada.")
-            del pending_requests[req_id]
-            break
+def handle_rejection_button(request_id, chat_id, message_id):
+    """Manejar rechazo desde botón"""
+    if request_id in pending_requests:
+        data = pending_requests[request_id]
+        
+        # Editar mensaje original para mostrar rechazado
+        edit_message(chat_id, message_id, 
+                    f"❌ *RECHAZADO*\n\n"
+                    f"*{data['location']['name']}* ha sido rechazada.")
+        
+        del pending_requests[request_id]
+    else:
+        edit_message(chat_id, message_id, "❌ Solicitud no encontrada")
 
-def handle_new_request(message, chat_id):
-    """Procesar nueva solicitud (para webhook directo)"""
+def handle_copy_coords(request_id, callback_id):
+    """Manejar copia de coordenadas"""
+    if request_id in pending_requests:
+        data = pending_requests[request_id]
+        coords = data['location']['coords']
+        
+        # Mostrar alerta con las coordenadas
+        answer_callback_query(callback_id, f"📋 Coordenadas:\n`{coords}`\n\n(Copia manualmente)")
+    else:
+        answer_callback_query(callback_id, "❌ Solicitud no encontrada")
+
+def handle_new_request_legacy(message, chat_id):
+    """Procesar nueva solicitud (para webhook directo - versión anterior)"""
     lines = message.split('\n')
     location = {}
     
@@ -158,13 +247,56 @@ def handle_new_request(message, chat_id):
             'chat_id': chat_id
         }
         
+        # Crear URL para Google Maps
+        try:
+            coords = location['coords'].split(',')
+            lat = coords[0].strip()
+            lon = coords[1].strip()
+            maps_url = f"https://www.google.com/maps?q={lat},{lon}"
+        except:
+            maps_url = f"https://www.google.com/maps/search/{location['name']}"
+        
+        # Crear teclado inline
+        keyboard = {
+            "inline_keyboard": [
+                [
+                    {"text": "✅ Aprobar", "callback_data": f"approve_{request_id}"},
+                    {"text": "❌ Rechazar", "callback_data": f"reject_{request_id}"}
+                ],
+                [
+                    {"text": "🗺️ Ver en Maps", "url": maps_url}
+                ]
+            ]
+        }
+        
         send_telegram(chat_id,
             f"📍 *Nueva Solicitud*\n\n"
             f"*{location['name']}*\n"
-            f"Coords: `{location['coords']}`\n\n"
-            f"Responde:\n"
-            f"✅ aprobar\n"
-            f"❌ rechazar")
+            f"📍 Coordenadas: `{location['coords']}`\n"
+            f"🏙️ Municipio: {location.get('municipio', 'No especificado')}\n"
+            f"🏛️ Departamento: {location.get('departamento', 'No especificado')}\n"
+            f"📌 Tipo: {location.get('type', 'colonia')}\n\n"
+            f"🆔 ID: `{request_id}`",
+            keyboard)
+
+def show_pending_requests(chat_id):
+    """Mostrar solicitudes pendientes"""
+    user_requests = {k: v for k, v in pending_requests.items() if v['chat_id'] == chat_id}
+    
+    if not user_requests:
+        send_telegram(chat_id, "📭 No hay solicitudes pendientes.")
+        return
+    
+    message = "📋 *Solicitudes Pendientes:*\n\n"
+    
+    for req_id, data in user_requests.items():
+        loc = data['location']
+        message += f"*📍 {loc['name']}*\n"
+        message += f"   🆔: `{req_id}`\n"
+        message += f"   📍: `{loc['coords']}`\n"
+        message += f"   🏙️: {loc.get('municipio', 'N/A')}\n\n"
+    
+    send_telegram(chat_id, message)
 
 def update_github(location):
     """Actualizar GitHub automáticamente"""
@@ -239,17 +371,61 @@ def update_github(location):
         print(f"Error GitHub: {e}")
         return False
 
-def send_telegram(chat_id, text):
-    """Enviar mensaje a Telegram"""
+def send_telegram(chat_id, text, reply_markup=None):
+    """Enviar mensaje a Telegram con opción de botones"""
     try:
         url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-        response = requests.post(url, json={
+        
+        data = {
             "chat_id": chat_id,
             "text": text,
-            "parse_mode": "Markdown"
-        })
+            "parse_mode": "Markdown",
+            "disable_web_page_preview": True
+        }
+        
+        if reply_markup:
+            data["reply_markup"] = reply_markup
+        
+        response = requests.post(url, json=data)
         return response.status_code == 200
-    except:
+    except Exception as e:
+        print(f"Error enviando mensaje: {e}")
+        return False
+
+def answer_callback_query(callback_id, text=None, show_alert=True):
+    """Responder a callback query de Telegram"""
+    try:
+        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/answerCallbackQuery"
+        data = {"callback_query_id": callback_id}
+        
+        if text:
+            data["text"] = text
+            data["show_alert"] = show_alert
+        
+        requests.post(url, json=data)
+        return True
+    except Exception as e:
+        print(f"Error answering callback: {e}")
+        return False
+
+def edit_message(chat_id, message_id, new_text, reply_markup=None):
+    """Editar un mensaje existente en Telegram"""
+    try:
+        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/editMessageText"
+        data = {
+            "chat_id": chat_id,
+            "message_id": message_id,
+            "text": new_text,
+            "parse_mode": "Markdown"
+        }
+        
+        if reply_markup:
+            data["reply_markup"] = reply_markup
+        
+        response = requests.post(url, json=data)
+        return response.status_code == 200
+    except Exception as e:
+        print(f"Error editando mensaje: {e}")
         return False
 
 if __name__ == '__main__':
