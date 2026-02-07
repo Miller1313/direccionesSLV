@@ -21,5 +21,18 @@
     "source": "user_submission",
     "detected_automatically": true,
     "full_address": "Test"
+  },
+  "la_puntilla_(san_jose_del_boqueron)": {
+    "name": "La Puntilla (San José del Boquerón)",
+    "lat": 15.513225966051195,
+    "lon": -87.90307562239109,
+    "municipio": "San Pedro Sula",
+    "departamento": "Cortés",
+    "type": "colonia",
+    "added": "2026-02-07T22:44:39.572323",
+    "approved": true,
+    "source": "user_submission",
+    "detected_automatically": true,
+    "full_address": "San José del Boquerón, San Pedro Sula, Cortés, Honduras"
   }
 }
