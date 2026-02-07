@@ -696,7 +696,7 @@
     // === LÍNEA 682: CAMBIA ESTOS VALORES ===
     const TELEGRAM_BOT_TOKEN = '8554913344:AAFx8KcrJhXDLuB7ufOXhVqf9y8CqtzjLW4';  // Reemplaza con tu token real
     const TELEGRAM_CHAT_ID = '5770086010';      // Reemplaza con tu chat ID
-    const RENDER_APP_URL = 'https://direccionesslv-izev.onrender.com/'; // URL de tu app en Render
+    const RENDER_APP_URL = 'https://direccionesslv-izev.onrender.com'; // URL de tu app en Render
     
     // === LÍNEA 688: Tu repositorio de GitHub ===
     const GITHUB_USER = 'Miller1313';         // Tu nombre de usuario de GitHub
@@ -1369,7 +1369,7 @@ async function sendToTelegram(locationData) {
         };
         
         // Método 1: Intentar enviar a través de Render
-        if (RENDER_APP_URL && RENDER_APP_URL !== 'https://direccionesslv-izev.onrender.com/') {
+        if (RENDER_APP_URL && RENDER_APP_URL !== 'https://direccionesslv-izev.onrender.com') {
             try {
                 const response = await fetch(`${RENDER_APP_URL}/send-notification`, {
                     method: 'POST',
