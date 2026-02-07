@@ -5,9 +5,9 @@ import json
 import base64
 import requests
 from datetime import datetime
-import uuid  # <-- AHORA SÍ ESTÁ AQUÍ
-import re    # <-- También agregué re para expresiones regulares
-import time  # <-- Y time para timestamps
+import uuid
+import re
+import time
 
 app = Flask(__name__)
 CORS(app)
@@ -18,12 +18,89 @@ GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
 GITHUB_REPO = os.getenv('GITHUB_REPO')
 GITHUB_FILE = 'locations.json'
 
+# Obtener puerto dinámico para Render
+PORT = int(os.getenv('PORT', 10000))
+
 # Almacenamiento simple en memoria
 pending_requests = {}
 
 @app.route('/')
 def home():
-    return "🤖 Bot de Aprobación Honduras - Online"
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>🤖 Bot de Aprobación Honduras</title>
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                text-align: center; 
+                padding: 50px; 
+                background: #1a1a1a; 
+                color: white; 
+            }
+            .container { 
+                max-width: 800px; 
+                margin: 0 auto; 
+                background: #262626; 
+                padding: 30px; 
+                border-radius: 15px; 
+                border: 2px solid #34675C; 
+            }
+            h1 { color: #70c4f4; }
+            .status { 
+                background: #4CAF50; 
+                color: white; 
+                padding: 10px 20px; 
+                border-radius: 20px; 
+                display: inline-block; 
+                margin: 20px 0; 
+            }
+            .endpoint { 
+                background: #2d2d2d; 
+                padding: 15px; 
+                margin: 15px 0; 
+                border-radius: 8px; 
+                text-align: left; 
+                border-left: 4px solid #70c4f4; 
+            }
+            code { 
+                background: #1a1a1a; 
+                padding: 3px 6px; 
+                border-radius: 4px; 
+                color: #98FFD9; 
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🤖 Bot de Aprobación Honduras</h1>
+            <div class="status">✅ SERVIDOR OPERATIVO</div>
+            
+            <p>Servidor para gestión de ubicaciones de Honduras</p>
+            
+            <div class="endpoint">
+                <strong>📡 Endpoints disponibles:</strong><br><br>
+                <code>GET /</code> - Esta página (status)<br>
+                <code>POST /webhook</code> - Webhook para Telegram<br>
+                <code>POST /send-notification</code> - Enviar solicitudes desde HTML<br>
+                <code>GET /approve/&lt;id&gt;</code> - Aprobar desde navegador
+            </div>
+            
+            <div class="endpoint">
+                <strong>🔧 Configuración:</strong><br><br>
+                • Puerto: <code>{}</code><br>
+                • Token Telegram: <code>{}</code><br>
+                • Repo GitHub: <code>{}</code><br>
+                • Archivo datos: <code>{}</code>
+            </div>
+            
+            <p><small>📊 Pendientes en memoria: {}</small></p>
+        </div>
+    </body>
+    </html>
+    """.format(PORT, "Configurado" if TELEGRAM_TOKEN else "No configurado", 
+               GITHUB_REPO, GITHUB_FILE, len(pending_requests))
 
 @app.route('/webhook', methods=['POST'])
 def telegram_webhook():
@@ -106,8 +183,6 @@ def send_notification():
     try:
         data = request.json
         print(f"📦 Datos recibidos: {data}")
-        
-        # Resto del código...
         
         location = data.get('location')
         chat_id = data.get('telegram_chat_id')
@@ -572,6 +647,5 @@ def answer_callback_query(callback_id, text=None, show_alert=True):
         return False
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))
-    print(f"🚀 Iniciando servidor en puerto {port}")
-    app.run(host='0.0.0.0', port=port, debug=True)
+    print(f"🚀 Iniciando servidor en puerto {PORT}")
+    app.run(host='0.0.0.0', port=PORT, debug=False)
