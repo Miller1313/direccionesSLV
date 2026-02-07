@@ -1,0 +1,12 @@
+{
+  "colonia_kennedy": {
+    "name": "Colonia Kennedy",
+    "lat": 14.0833,
+    "lon": -87.1833,
+    "municipio": "Tegucigalpa",
+    "departamento": "Francisco Morazán",
+    "type": "colonia",
+    "added": "2024-01-01T00:00:00.000Z",
+    "source": "official"
+  }
+}
