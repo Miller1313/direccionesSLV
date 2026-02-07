@@ -3,187 +3,1879 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buscador Logístico HN - Alpine Soft</title>
+    <title>Buscador HN - Instantáneo</title>
     <style>
         :root {
-            --blue-sky: #70c4f4;    /* Nombres de Lugares (Más suave) */
-            --granite: #B7B8B6;     /* Texto secundario */
-            --pine: #34675C;        /* Bordes y Divisiones */
-            --soft-mint: #98FFD9;   /* El nuevo color: más claro y estético */
-            --bg-dark: #1a1a1a;     /* Fondo profundo */
-            --card-bg: #262626;     /* Fondo de tarjetas */
+            --blue-sky: #70c4f4;
+            --granite: #B7B8B6;
+            --pine: #34675C;
+            --soft-mint: #98FFD9;
+            --bg-dark: #1a1a1a;
+            --card-bg: #262626;
+            --warning: #FFB74D;
+            --success: #4CAF50;
+            --purple: #9C27B0;
+            --telegram-blue: #0088cc;
         }
 
         body { 
             font-family: 'Segoe UI', system-ui, sans-serif;
             background-color: var(--bg-dark);
             color: white;
-            margin: 0; padding: 20px;
-            display: flex; justify-content: center;
+            margin: 0; 
+            padding: 15px;
+            display: flex; 
+            justify-content: center;
+            min-height: 100vh;
         }
 
-        .container { width: 100%; max-width: 520px; }
+        .container { 
+            width: 100%; 
+            max-width: 700px; 
+        }
 
-        .header { text-align: center; margin-bottom: 25px; }
-        .header h1 { font-size: 24px; margin: 0; color: var(--blue-sky); font-weight: 800; letter-spacing: 1px; }
-        .header p { font-size: 13px; color: var(--soft-mint); font-weight: 600; margin-top: 5px; opacity: 0.9; }
+        .header { 
+            text-align: center; 
+            margin-bottom: 20px; 
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--pine);
+            position: relative;
+        }
+        
+        .header h1 { 
+            font-size: 22px; 
+            margin: 0; 
+            color: var(--blue-sky); 
+            font-weight: 800; 
+            letter-spacing: 0.5px; 
+        }
+        
+        .header p { 
+            font-size: 13px; 
+            color: var(--soft-mint); 
+            font-weight: 600; 
+            margin-top: 5px; 
+            opacity: 0.9; 
+        }
+
+        /* Botón flotante sutil */
+        .floating-add-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: var(--purple);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);
+            z-index: 100;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .floating-add-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(156, 39, 176, 0.4);
+            background: #8A25A0;
+        }
+
+        /* Botón Telegram */
+        .telegram-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--telegram-blue), #00aced);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 136, 204, 0.3);
+            z-index: 1000;
+            display: none;
+            transition: all 0.3s;
+        }
+
+        .telegram-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 136, 204, 0.4);
+        }
+
+        .admin-badge {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: var(--purple);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .search-section {
+            position: relative;
+            margin-bottom: 15px;
+        }
 
         .search-input {
             width: 100%;
-            padding: 16px 20px;
-            border-radius: 12px;
+            padding: 14px 18px;
+            border-radius: 10px;
             border: 2px solid var(--pine);
             background: var(--card-bg);
             color: white;
-            font-size: 18px;
+            font-size: 16px;
             box-sizing: border-box;
             outline: none;
             transition: all 0.3s ease;
         }
+        
         .search-input:focus {
             border-color: var(--soft-mint);
-            box-shadow: 0 0 15px rgba(152, 255, 217, 0.15);
+            box-shadow: 0 0 12px rgba(152, 255, 217, 0.2);
         }
 
-        .results-list { margin-top: 20px; }
+        .search-input::placeholder {
+            color: var(--granite);
+            opacity: 0.7;
+        }
 
-        .location-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 18px;
-            margin-bottom: 12px;
+        .search-info {
+            font-size: 12px;
+            color: var(--soft-mint);
+            text-align: right;
+            margin-top: 5px;
+            opacity: 0.8;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 3px solid var(--pine);
-            transition: all 0.2s;
-        }
-        .location-card:hover { transform: translateY(-3px); border-bottom-color: var(--soft-mint); }
-
-        .info { cursor: pointer; flex: 1; }
-        .place-name { 
-            font-size: 19px; font-weight: 700; color: var(--blue-sky); 
-            display: block; margin-bottom: 6px; 
         }
 
-        .detail-row { font-size: 13px; color: var(--granite); margin-bottom: 3px; }
-        .detail-row b { color: var(--soft-mint); font-weight: 600; }
-
-        .btn-coords {
-            background: var(--soft-mint);
-            color: #1a1a1a;
-            border: none;
-            padding: 12px 15px;
+        .cache-indicator {
+            background: var(--success);
+            color: white;
+            padding: 2px 8px;
             border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+            opacity: 0.8;
+        }
+
+        .results-list { 
+            margin-top: 15px; 
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .results-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .results-list::-webkit-scrollbar-track {
+            background: var(--card-bg);
+            border-radius: 3px;
+        }
+
+        .results-list::-webkit-scrollbar-thumb {
+            background: var(--pine);
+            border-radius: 3px;
+        }
+
+        .location-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--pine);
+            transition: all 0.2s;
             cursor: pointer;
+            position: relative;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .location-card:hover { 
+            transform: translateX(3px); 
+            border-left-color: var(--soft-mint);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .location-card.user-added {
+            border-left-color: var(--purple);
+            background: linear-gradient(to right, rgba(156, 39, 176, 0.05), var(--card-bg));
+        }
+
+        .location-card.repeated {
+            border-left-color: var(--warning);
+        }
+
+        .location-type {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--pine);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
             font-size: 11px;
-            font-weight: 900;
-            transition: 0.3s;
-            margin-left: 15px;
+            font-weight: bold;
             text-transform: uppercase;
         }
-        .btn-coords:hover { background: white; transform: scale(1.05); }
-        .btn-coords.success { background: var(--blue-sky); color: white; }
 
-        .google-link {
+        .location-card.user-added .location-type {
+            background: var(--purple);
+        }
+
+        .location-card.repeated .location-type {
+            background: var(--warning);
+            color: var(--bg-dark);
+        }
+
+        .user-added-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: var(--purple);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 9px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .place-name { 
+            font-size: 17px; 
+            font-weight: 700; 
+            color: var(--blue-sky); 
+            display: block; 
+            margin-bottom: 8px; 
+            padding-right: 80px;
+        }
+
+        .location-card.user-added .place-name {
+            color: var(--soft-mint);
+        }
+
+        .location-card.repeated .place-name {
+            color: var(--warning);
+        }
+
+        .location-hierarchy {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 8px;
+            margin: 8px 0;
+        }
+
+        .hierarchy-item {
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .hierarchy-label {
+            color: var(--soft-mint);
+            font-weight: 600;
+            min-width: 100px;
+        }
+
+        .hierarchy-value {
+            color: white;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .coordinates-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .coords-display {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: var(--granite);
+            background: rgba(255,255,255,0.08);
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            padding: 7px 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        .btn-copy {
+            background: var(--soft-mint);
+            color: var(--bg-dark);
+        }
+
+        .btn-copy:hover {
+            background: white;
+            transform: scale(1.05);
+        }
+
+        .btn-copy.success {
+            background: var(--blue-sky);
+            color: white;
+        }
+
+        .btn-map {
+            background: var(--pine);
+            color: white;
+        }
+
+        .btn-map:hover {
+            background: #2a564d;
+        }
+
+        .warning-note {
+            background: rgba(255, 183, 77, 0.1);
+            border: 1px solid var(--warning);
+            color: var(--warning);
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-note {
+            background: rgba(156, 39, 176, 0.1);
+            border: 1px solid var(--purple);
+            color: var(--soft-mint);
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--granite);
+        }
+
+        .no-results-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .searching {
+            text-align: center;
+            padding: 20px;
+            color: var(--soft-mint);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--pine);
+            border-top: 3px solid var(--soft-mint);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-stats {
+            font-size: 12px;
+            color: var(--granite);
+            text-align: center;
+            margin-top: 15px;
+            padding: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+        }
+
+        .quick-filters {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .quick-filter {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--pine);
+            color: var(--soft-mint);
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quick-filter:hover {
+            background: var(--pine);
+            color: white;
+        }
+
+        /* MODAL ESTILOS */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .modal-title {
+            color: var(--blue-sky);
+            font-size: 20px;
+            margin: 0 0 10px 0;
+        }
+
+        .modal-subtitle {
+            color: var(--granite);
+            font-size: 13px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            color: var(--soft-mint);
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 2px solid var(--pine);
+            background: rgba(255,255,255,0.05);
+            color: white;
+            font-size: 14px;
+            box-sizing: border-box;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus {
+            border-color: var(--soft-mint);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .btn-modal {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--pine);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2a564d;
+        }
+
+        .btn-secondary-modal {
+            background: rgba(255,255,255,0.05);
+            color: var(--granite);
+            border: 1px solid var(--granite);
+        }
+
+        .btn-secondary-modal:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .coords-input {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .current-location-btn {
+            width: 100%;
+            padding: 10px;
+            background: var(--pine);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .current-location-btn:hover {
+            background: #2a564d;
+        }
+
+        .coords-example {
+            font-size: 11px;
+            color: var(--granite);
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        .coords-example span {
+            font-family: 'Courier New', monospace;
+            color: var(--soft-mint);
+            background: rgba(255,255,255,0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .admin-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-admin {
+            padding: 5px 10px;
+            border-radius: 6px;
+            border: none;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-approve {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-reject {
+            background: #F44336;
+            color: white;
+        }
+
+        .admin-tools {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 99;
+        }
+
+        .admin-tool-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--purple);
+            color: white;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .admin-tool-btn:hover {
+            transform: scale(1.1);
+            background: #8A25A0;
+        }
+
+        .admin-tool-btn.export {
+            background: var(--success);
+        }
+
+        .admin-tool-btn.import {
+            background: var(--blue-sky);
+        }
+
+        .admin-tool-btn.pending {
+            background: var(--warning);
+        }
+
+        .map-search-link {
             display: block;
             text-align: center;
             padding: 15px;
-            color: var(--granite);
+            color: var(--soft-mint);
             text-decoration: none;
-            border-radius: 12px;
+            border-radius: 10px;
             border: 1px dashed var(--pine);
-            margin-top: 25px;
+            margin-top: 20px;
             font-weight: 600;
             font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .map-search-link:hover {
+            border-color: var(--soft-mint);
+            color: var(--soft-mint);
+            background: rgba(152, 255, 217, 0.05);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--success);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { transform: translate(-50%, -100%); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+
+        .coords-info {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 5px;
+        }
+
+        .paste-coords-btn {
+            padding: 8px 12px;
+            background: var(--pine);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .paste-coords-btn:hover {
+            background: #2a564d;
+        }
+
+        /* Modal de Telegram */
+        .telegram-modal .modal-content {
+            max-width: 450px;
+        }
+
+        .telegram-preview {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: left;
+            border-left: 4px solid var(--telegram-blue);
+        }
+
+        .telegram-preview div {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .telegram-preview strong {
+            color: var(--soft-mint);
+        }
+
+        .btn-telegram {
+            background: linear-gradient(135deg, var(--telegram-blue), #00aced);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-telegram:hover {
+            background: linear-gradient(135deg, #0077b5, #0099cc);
+        }
+
+        .telegram-info {
+            font-size: 12px;
+            color: var(--granite);
+            margin-top: 15px;
+            line-height: 1.4;
         }
     </style>
 </head>
 <body>
 
+<!-- Botón flotante para agregar dirección -->
+<button class="floating-add-btn" onclick="openAddModal()" title="Agregar nueva dirección">
+    +
+</button>
+
+<!-- Botón flotante para Telegram -->
+<button class="telegram-btn" id="telegramBtn" onclick="openTelegramModal()" title="Enviar solicitud al administrador">
+    🤖
+</button>
+
+<!-- Herramientas de administrador (flotantes) -->
+<div class="admin-tools" id="adminTools" style="display:none;">
+    <button class="admin-tool-btn export" onclick="exportUserLocations()" title="Exportar direcciones">
+        📥
+    </button>
+    <button class="admin-tool-btn import" onclick="importUserLocations()" title="Importar direcciones">
+        📤
+    </button>
+    <button class="admin-tool-btn pending" onclick="viewPendingApprovals()" title="Ver pendientes">
+        ⏳
+    </button>
+</div>
+
 <div class="container">
     <div class="header">
-        <h1>Buscador Servidor 🇸🇻 El Salvador 🇸🇻 Pro</h1>
-        <p>Ubicaciones de Precisión</p>
+        <div class="admin-badge" onclick="toggleAdminMode()" id="adminBadge">
+            👑 Modo Usuario
+        </div>
+        <h1>⚡ Buscador Honduras - Instantáneo</h1>
+        <p>Resultados en tiempo real con cache local</p>
     </div>
 
-    <input type="text" id="mainSearch" class="search-input" placeholder="Buscar por: Departamento, Municipio, Barrio, Colonia...." onkeyup="processSearch()">
-    
+    <div class="search-section">
+        <input type="text" id="mainSearch" class="search-input" 
+               placeholder="Buscar colonia, barrio, aldea, caserío...">
+        <div class="search-info">
+            <div id="cacheStatus"></div>
+            <div id="searchStatus">Escriba para buscar</div>
+        </div>
+    </div>
+
+    <div class="quick-filters" id="quickFilters"></div>
+
     <div id="resultsContainer" class="results-list"></div>
     
-    <a id="rescueBtn" href="#" target="_blank" class="google-link" style="display:none;">
-        📍 ¿No lo encuentras? Buscar en Google Maps
+    <div id="resultsStats" class="results-stats" style="display:none;"></div>
+
+    <a id="mapSearchLink" href="#" target="_blank" class="map-search-link" style="display:none;">
+        🔍 ¿No está la que buscabas? Buscar en Google Maps
     </a>
 </div>
 
-<script>
-    let searchTimer;
+<!-- Modal SIMPLIFICADO para agregar dirección -->
+<div id="addModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">📍 Agregar por Coordenadas</h3>
+            <p class="modal-subtitle">Solo necesitas pegar las coordenadas de Google Maps</p>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Coordenadas (lat, lon) *</label>
+            <input type="text" id="coordsInput" class="form-input coords-input" 
+                   placeholder="15.51324796930479, -88.01434580719767">
+            <div class="coords-example">
+                Formato: <span>latitud, longitud</span>
+            </div>
+            
+            <div class="coords-info">
+                <button class="paste-coords-btn" onclick="pasteFromClipboard()">
+                    📋 Pegar desde portapapeles
+                </button>
+                <button class="current-location-btn" onclick="getCurrentLocation()">
+                    📍 Usar mi ubicación
+                </button>
+            </div>
+            
+            <p style="font-size: 11px; color: var(--granite); margin-top: 15px;">
+                🔍 <strong>Cómo obtener coordenadas:</strong><br>
+                1. Abre Google Maps<br>
+                2. Haz clic derecho en cualquier lugar<br>
+                3. Selecciona "¿Qué hay aquí?"<br>
+                4. Copia las coordenadas que aparecen
+            </p>
+        </div>
 
-    function copyToClipboard(btn, lat, lon) {
-        navigator.clipboard.writeText(`${lat}, ${lon}`).then(() => {
-            const oldText = btn.innerText;
-            btn.innerText = "COPIADO";
-            btn.classList.add('success');
-            setTimeout(() => {
-                btn.innerText = oldText;
-                btn.classList.remove('success');
-            }, 1000);
+        <div class="modal-buttons">
+            <button class="btn-modal btn-secondary-modal" onclick="closeAddModal()">
+                Cancelar
+            </button>
+            <button class="btn-modal btn-primary" onclick="processCoordinates()">
+                Buscar y Agregar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Telegram -->
+<div id="telegramModal" class="modal-overlay telegram-modal" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">📤 Enviar Solicitud</h3>
+            <p class="modal-subtitle">La dirección será enviada al administrador para aprobación</p>
+        </div>
+        
+        <div id="telegramPreview" class="telegram-preview">
+            <!-- Aquí se muestra la preview -->
+        </div>
+        
+        <div class="modal-buttons">
+            <button class="btn-modal btn-secondary-modal" onclick="closeTelegramModal()">
+                Cancelar
+            </button>
+            <button class="btn-modal btn-primary btn-telegram" onclick="confirmSendToTelegram()">
+                <span>🤖</span> Enviar a Telegram
+            </button>
+        </div>
+        
+        <p class="telegram-info">
+            La solicitud se enviará al administrador para aprobación.
+            Será visible para todos los usuarios una vez aprobada.
+            Recibirás una confirmación cuando se procese tu solicitud.
+        </p>
+    </div>
+</div>
+
+<!-- Modal para aprobaciones pendientes -->
+<div id="approvalModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">⏳ Direcciones Pendientes de Aprobación</h3>
+            <p class="modal-subtitle" id="pendingCount">0 pendientes</p>
+        </div>
+        
+        <div id="pendingList" style="max-height: 400px; overflow-y: auto;">
+            <!-- Las solicitudes pendientes aparecerán aquí -->
+        </div>
+        
+        <div class="modal-buttons">
+            <button class="btn-modal btn-secondary-modal" onclick="closeApprovalModal()">
+                Cerrar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Cargar el script de Telegram -->
+<script src="bot-sender.js"></script>
+
+<script>
+    // ========== CONFIGURACIÓN INICIAL ==========
+    const IS_ADMIN = true; // Cambia a false para modo usuario normal
+    let isAdminMode = IS_ADMIN;
+    let currentLocationData = null;
+    
+    // ========== ALMACENAMIENTO ==========
+    const searchCache = new Map();
+    const CACHE_DURATION = 24 * 60 * 60 * 1000;
+    
+    // Base de datos local
+    const localDatabase = {
+        "colonia kennedy": { name: "Colonia Kennedy", lat: 14.0833, lon: -87.1833, municipio: "Tegucigalpa", departamento: "Francisco Morazán", type: "colonia", approved: true },
+        "colonia satélite": { name: "Colonia Satélite", lat: 15.5200, lon: -88.0400, municipio: "San Pedro Sula", departamento: "Cortés", type: "colonia", approved: true },
+        "colonia palmira": { name: "Colonia Palmira", lat: 14.1000, lon: -87.2000, municipio: "Tegucigalpa", departamento: "Francisco Morazán", type: "colonia", approved: true },
+        "colonia los laureles": { name: "Colonia Los Laureles", lat: 15.4960, lon: -88.0240, municipio: "San Pedro Sula", departamento: "Cortés", type: "colonia", approved: true },
+        "barrio el centro": { name: "Barrio El Centro", lat: 14.0940, lon: -87.2040, municipio: "Tegucigalpa", departamento: "Francisco Morazán", type: "barrio", approved: true },
+        "barrio las acacias": { name: "Barrio Las Acacias", lat: 15.5100, lon: -88.0200, municipio: "San Pedro Sula", departamento: "Cortés", type: "barrio", approved: true },
+        "barrio la isla": { name: "Barrio La Isla", lat: 15.5200, lon: -88.0100, municipio: "San Pedro Sula", departamento: "Cortés", type: "barrio", approved: true },
+        "barrio abajo": { name: "Barrio Abajo", lat: 14.0900, lon: -87.1900, municipio: "Tegucigalpa", departamento: "Francisco Morazán", type: "barrio", approved: true },
+        "la esperanza": { name: "La Esperanza", lat: 14.3167, lon: -88.1667, municipio: "La Esperanza", departamento: "Intibucá", type: "aldea", approved: true },
+        "valle de angeles": { name: "Valle de Ángeles", lat: 14.1500, lon: -87.0333, municipio: "Valle de Ángeles", departamento: "Francisco Morazán", type: "aldea", approved: true },
+        "santa lucia": { name: "Santa Lucía", lat: 14.1167, lon: -87.1167, municipio: "Santa Lucía", departamento: "Francisco Morazán", type: "aldea", approved: true },
+        "tegucigalpa": { name: "Tegucigalpa", lat: 14.0818, lon: -87.2068, municipio: "Tegucigalpa", departamento: "Francisco Morazán", type: "municipio", approved: true },
+        "san pedro sula": { name: "San Pedro Sula", lat: 15.5000, lon: -88.0300, municipio: "San Pedro Sula", departamento: "Cortés", type: "municipio", approved: true },
+        "la ceiba": { name: "La Ceiba", lat: 15.7833, lon: -86.8000, municipio: "La Ceiba", departamento: "Atlántida", type: "municipio", approved: true },
+        "choloma": { name: "Choloma", lat: 15.6144, lon: -87.9530, municipio: "Choloma", departamento: "Cortés", type: "municipio", approved: true },
+        "francisco morazan": { name: "Francisco Morazán", lat: 14.1000, lon: -87.2167, departamento: "Francisco Morazán", type: "departamento", approved: true },
+        "cortes": { name: "Cortés", lat: 15.5000, lon: -88.0000, departamento: "Cortés", type: "departamento", approved: true },
+        "atlantida": { name: "Atlántida", lat: 15.6833, lon: -87.3167, departamento: "Atlántida", type: "departamento", approved: true },
+    };
+    
+    // Base de datos de usuarios
+    let userLocations = {
+        pending: [],
+        approved: []
+    };
+
+    // ========== FUNCIONES DE CACHE ==========
+    function loadCacheFromStorage() {
+        try {
+            const savedCache = localStorage.getItem('hnSearchCache');
+            if (savedCache) {
+                const parsed = JSON.parse(savedCache);
+                const now = Date.now();
+                
+                Object.entries(parsed).forEach(([key, data]) => {
+                    if (now - data.timestamp < CACHE_DURATION) {
+                        searchCache.set(key, data.results);
+                    }
+                });
+                
+                updateCacheStatus();
+            }
+        } catch (e) {
+            console.log("Error cargando cache:", e);
+        }
+    }
+
+    function saveCacheToStorage() {
+        try {
+            const cacheObj = {};
+            const now = Date.now();
+            
+            searchCache.forEach((results, key) => {
+                cacheObj[key] = {
+                    results: results,
+                    timestamp: now
+                };
+            });
+            
+            localStorage.setItem('hnSearchCache', JSON.stringify(cacheObj));
+        } catch (e) {
+            console.log("Error guardando cache:", e);
+        }
+    }
+
+    // ========== INICIALIZACIÓN ==========
+    function initializeApp() {
+        loadCacheFromStorage();
+        loadUserLocations();
+        updateAdminBadge();
+        updateAdminTools();
+        setupQuickFilters();
+        showEmptyState();
+        hideTelegramButton();
+    }
+
+    function loadUserLocations() {
+        try {
+            const saved = localStorage.getItem('hnUserLocations');
+            if (saved) {
+                userLocations = JSON.parse(saved);
+            }
+        } catch (e) {
+            console.log("Error cargando ubicaciones de usuario:", e);
+        }
+    }
+
+    function saveUserLocations() {
+        try {
+            localStorage.setItem('hnUserLocations', JSON.stringify(userLocations));
+        } catch (e) {
+            console.log("Error guardando ubicaciones:", e);
+        }
+    }
+
+    // ========== FUNCIONES ADMIN ==========
+    function toggleAdminMode() {
+        isAdminMode = !isAdminMode;
+        updateAdminBadge();
+        updateAdminTools();
+        
+        if (lastQuery.length >= 2) {
+            performSearch(lastQuery);
+        }
+        
+        showNotification(isAdminMode ? '👑 Modo Administrador activado' : '👤 Modo Usuario activado');
+    }
+
+    function updateAdminBadge() {
+        const badge = document.getElementById('adminBadge');
+        if (isAdminMode) {
+            badge.innerHTML = '👑 Modo Admin';
+            badge.style.background = 'var(--purple)';
+        } else {
+            badge.innerHTML = '👤 Modo Usuario';
+            badge.style.background = 'var(--pine)';
+        }
+    }
+
+    function updateAdminTools() {
+        const tools = document.getElementById('adminTools');
+        tools.style.display = isAdminMode ? 'flex' : 'none';
+    }
+
+    function showNotification(message, duration = 3000) {
+        const notification = document.createElement('div');
+        notification.className = 'notification';
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, duration);
+    }
+
+    // ========== TELEGRAM FUNCTIONS ==========
+    function showTelegramButton(locationData) {
+        currentLocationData = locationData;
+        document.getElementById('telegramBtn').style.display = 'block';
+        
+        // Actualizar preview en el modal
+        const preview = document.getElementById('telegramPreview');
+        preview.innerHTML = `
+            <div><strong>📍 Lugar:</strong> ${locationData.name || 'Sin nombre'}</div>
+            <div><strong>🏙️ Municipio:</strong> ${locationData.municipio || 'No especificado'}</div>
+            <div><strong>🗺️ Departamento:</strong> ${locationData.departamento || 'No especificado'}</div>
+            <div><strong>📊 Tipo:</strong> ${locationData.type || 'ubicación'}</div>
+            <div><strong>🌐 Coordenadas:</strong> ${locationData.lat?.toFixed(6)}, ${locationData.lon?.toFixed(6)}</div>
+            <div><strong>👤 Enviado por:</strong> Usuario</div>
+        `;
+    }
+
+    function hideTelegramButton() {
+        document.getElementById('telegramBtn').style.display = 'none';
+        currentLocationData = null;
+    }
+
+    function openTelegramModal() {
+        if (!currentLocationData) {
+            showNotification('❌ No hay datos para enviar', 3000);
+            return;
+        }
+        document.getElementById('telegramModal').style.display = 'flex';
+    }
+
+    function closeTelegramModal() {
+        document.getElementById('telegramModal').style.display = 'none';
+    }
+
+    function confirmSendToTelegram() {
+        if (!currentLocationData) {
+            showNotification('❌ Error: Datos no disponibles', 3000);
+            return;
+        }
+        
+        // Llamar a la función del bot-sender.js
+        if (typeof enviarSolicitudTelegram === 'function') {
+            enviarSolicitudTelegram(currentLocationData);
+            showNotification('📤 Enviando solicitud a Telegram...');
+        } else {
+            showNotification('❌ Error: Sistema de Telegram no cargado', 4000);
+            console.log('Función enviarSolicitudTelegram no disponible');
+        }
+        
+        closeTelegramModal();
+        hideTelegramButton();
+    }
+
+    // ========== MODAL SIMPLIFICADO DE COORDENADAS ==========
+    function openAddModal() {
+        document.getElementById('addModal').style.display = 'flex';
+        // Limpiar input
+        document.getElementById('coordsInput').value = '';
+        // Poner foco en el input
+        setTimeout(() => {
+            document.getElementById('coordsInput').focus();
+        }, 100);
+    }
+
+    function closeAddModal() {
+        document.getElementById('addModal').style.display = 'none';
+    }
+
+    function pasteFromClipboard() {
+        navigator.clipboard.readText()
+            .then(text => {
+                // Limpiar el texto y ponerlo en el input
+                const cleaned = cleanCoordinateText(text);
+                document.getElementById('coordsInput').value = cleaned;
+                showNotification('📋 Coordenadas pegadas');
+            })
+            .catch(err => {
+                showNotification('❌ No se pudo leer el portapapeles', 4000);
+            });
+    }
+
+    function cleanCoordinateText(text) {
+        // Limpiar el texto de coordenadas
+        return text
+            .replace(/[^\d.,\s-]/g, '') // Eliminar caracteres no numéricos
+            .replace(/\s+/g, ' ')       // Reducir espacios múltiples
+            .trim()                     // Eliminar espacios al inicio/final
+            .replace(/,/g, ', ')        // Formatear coma con espacio
+            .replace(/,\s+,/g, ',')     // Eliminar comas múltiples
+            .replace(/\s*,\s*/g, ', ')  // Normalizar espacios alrededor de comas
+            .replace(/^(-?\d+\.?\d*),\s*(-?\d+\.?\d*)$/, '$1, $2'); // Formato final
+    }
+
+    function getCurrentLocation() {
+        if (navigator.geolocation) {
+            showNotification('Obteniendo ubicación...');
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude.toFixed(14);
+                    const lon = position.coords.longitude.toFixed(14);
+                    document.getElementById('coordsInput').value = `${lat}, ${lon}`;
+                    showNotification('📍 Ubicación obtenida');
+                },
+                (error) => {
+                    showNotification('❌ Error al obtener ubicación: ' + error.message, 5000);
+                }
+            );
+        } else {
+            showNotification('❌ Geolocalización no soportada por este navegador', 5000);
+        }
+    }
+
+    function parseCoordinates(coordsString) {
+        // Limpiar y parsear coordenadas
+        const cleaned = coordsString
+            .replace(/[^\d.,\s-]/g, '')
+            .trim();
+        
+        // Dividir por coma o espacio
+        const parts = cleaned.split(/[,\s]+/).filter(part => part !== '');
+        
+        if (parts.length !== 2) {
+            throw new Error('Formato inválido. Usa: latitud, longitud');
+        }
+        
+        const lat = parseFloat(parts[0]);
+        const lon = parseFloat(parts[1]);
+        
+        if (isNaN(lat) || isNaN(lon)) {
+            throw new Error('Coordenadas no son números válidos');
+        }
+        
+        return { lat, lon };
+    }
+
+    async function processCoordinates() {
+        const coordsString = document.getElementById('coordsInput').value.trim();
+        
+        if (!coordsString) {
+            showNotification('❌ Ingresa las coordenadas', 4000);
+            return;
+        }
+        
+        try {
+            const { lat, lon } = parseCoordinates(coordsString);
+            
+            // Validar coordenadas de Honduras
+            if (lon > -83 || lon < -89.5 || lat < 12.9 || lat > 16.6) {
+                if (!confirm('⚠️ Las coordenadas parecen estar fuera de Honduras. ¿Deseas continuar?')) {
+                    return;
+                }
+            }
+            
+            showNotification('🔍 Buscando dirección...');
+            
+            // Usar Reverse Geocoding para obtener la dirección
+            const locationInfo = await reverseGeocode(lat, lon);
+            
+            // Si el reverse geocoding falla, usar coordenadas directamente
+            if (!locationInfo) {
+                await saveDirectLocation(lat, lon);
+            } else {
+                await saveLocationWithInfo(lat, lon, locationInfo);
+            }
+            
+        } catch (error) {
+            showNotification('❌ Error: ' + error.message, 5000);
+        }
+    }
+
+    async function reverseGeocode(lat, lon) {
+        try {
+            // Usar Nominatim para reverse geocoding
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?` +
+                `lat=${lat}&lon=${lon}&format=json&addressdetails=1&zoom=18`
+            );
+            
+            if (!response.ok) throw new Error('API Error');
+            
+            const data = await response.json();
+            const address = data.address || {};
+            
+            return {
+                name: data.display_name.split(',')[0] || 'Ubicación sin nombre',
+                municipio: address.city || address.town || address.municipality || address.county || '',
+                departamento: address.state || address.region || '',
+                type: determineLocationType(address)
+            };
+        } catch (error) {
+            console.log("Reverse geocoding error:", error);
+            return null;
+        }
+    }
+
+    function determineLocationType(address) {
+        if (address.suburb) return address.suburb.includes('Colonia') ? 'colonia' : 'barrio';
+        if (address.village) return 'aldea';
+        if (address.hamlet) return 'caserío';
+        if (address.city || address.town) return 'municipio';
+        if (address.state) return 'departamento';
+        return 'ubicación';
+    }
+
+    async function saveDirectLocation(lat, lon) {
+        const newLocation = {
+            id: Date.now(),
+            name: `Ubicación ${lat.toFixed(6)}, ${lon.toFixed(6)}`,
+            type: 'ubicación',
+            lat: lat,
+            lon: lon,
+            municipio: 'Por determinar',
+            departamento: 'Por determinar',
+            addedBy: 'user',
+            timestamp: new Date().toISOString(),
+            approved: isAdminMode,
+            coordsOnly: true
+        };
+        
+        saveLocationToDatabase(newLocation);
+    }
+
+    async function saveLocationWithInfo(lat, lon, info) {
+        const newLocation = {
+            id: Date.now(),
+            name: info.name,
+            type: info.type,
+            lat: lat,
+            lon: lon,
+            municipio: info.municipio,
+            departamento: info.departamento,
+            addedBy: 'user',
+            timestamp: new Date().toISOString(),
+            approved: isAdminMode
+        };
+        
+        saveLocationToDatabase(newLocation);
+    }
+
+    function saveLocationToDatabase(location) {
+        if (isAdminMode) {
+            userLocations.approved.push(location);
+            showNotification('✅ Dirección agregada y aprobada');
+        } else {
+            location.approved = false;
+            userLocations.pending.push(location);
+            showNotification('📋 Dirección enviada para aprobación');
+            
+            // Mostrar botón de Telegram para enviar al admin
+            showTelegramButton(location);
+        }
+        
+        saveUserLocations();
+        closeAddModal();
+        
+        // Si hay búsqueda activa, refrescar resultados
+        if (lastQuery.length >= 2) {
+            const localResults = searchLocalFast(lastQuery);
+            displayResults(localResults, true);
+        }
+    }
+
+    // ========== APROBACIONES PENDIENTES ==========
+    function viewPendingApprovals() {
+        if (!isAdminMode) return;
+        
+        const modal = document.getElementById('approvalModal');
+        const pendingList = document.getElementById('pendingList');
+        const pendingCount = document.getElementById('pendingCount');
+        
+        pendingCount.textContent = `${userLocations.pending.length} pendientes`;
+        
+        if (userLocations.pending.length === 0) {
+            pendingList.innerHTML = '<p style="text-align:center; color:var(--granite); padding:20px;">No hay solicitudes pendientes</p>';
+        } else {
+            let html = '';
+            userLocations.pending.forEach((location, index) => {
+                html += `
+                    <div class="location-card user-added" style="margin-bottom:10px;">
+                        <div class="user-added-badge">PENDIENTE</div>
+                        <span class="place-name">${location.name}</span>
+                        <div class="location-hierarchy">
+                            <div class="hierarchy-item">
+                                <span class="hierarchy-label">Tipo:</span>
+                                <span class="hierarchy-value">${location.type}</span>
+                            </div>
+                            <div class="hierarchy-item">
+                                <span class="hierarchy-label">Municipio:</span>
+                                <span class="hierarchy-value">${location.municipio}</span>
+                            </div>
+                            <div class="hierarchy-item">
+                                <span class="hierarchy-label">Depto:</span>
+                                <span class="hierarchy-value">${location.departamento}</span>
+                            </div>
+                        </div>
+                        <div class="coordinates-row">
+                            <span class="coords-display">
+                                📍 ${location.lat.toFixed(6)}, ${location.lon.toFixed(6)}
+                            </span>
+                            <div class="admin-controls">
+                                <button class="btn-admin btn-approve" onclick="approveLocation(${index})">
+                                    ✅ Aprobar
+                                </button>
+                                <button class="btn-admin btn-reject" onclick="rejectLocation(${index})">
+                                    ❌ Rechazar
+                                </button>
+                            </div>
+                        </div>
+                        <div class="user-note">
+                            📅 ${new Date(location.timestamp).toLocaleDateString()}
+                            ${location.coordsOnly ? ' | 📍 Solo coordenadas' : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            pendingList.innerHTML = html;
+        }
+        
+        modal.style.display = 'flex';
+    }
+
+    function closeApprovalModal() {
+        document.getElementById('approvalModal').style.display = 'none';
+    }
+
+    function approveLocation(index) {
+        const location = userLocations.pending[index];
+        location.approved = true;
+        
+        userLocations.approved.push(location);
+        userLocations.pending.splice(index, 1);
+        
+        saveUserLocations();
+        viewPendingApprovals();
+        showNotification('✅ Dirección aprobada exitosamente');
+    }
+
+    function rejectLocation(index) {
+        if (confirm('¿Estás seguro de rechazar esta dirección?')) {
+            userLocations.pending.splice(index, 1);
+            saveUserLocations();
+            viewPendingApprovals();
+            showNotification('❌ Dirección rechazada');
+        }
+    }
+
+    // ========== BACKUP/RESTORE ==========
+    function exportUserLocations() {
+        if (!isAdminMode) return;
+        
+        const data = {
+            approved: userLocations.approved,
+            exportedAt: new Date().toISOString()
+        };
+        
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `hn-direcciones-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        showNotification('📥 Direcciones exportadas exitosamente');
+    }
+
+    function importUserLocations() {
+        if (!isAdminMode) return;
+        
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = (event) => {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    
+                    if (data.approved && Array.isArray(data.approved)) {
+                        userLocations.approved = [...userLocations.approved, ...data.approved];
+                        saveUserLocations();
+                        showNotification(`✅ ${data.approved.length} direcciones importadas`);
+                    } else {
+                        showNotification('❌ Formato de archivo inválido');
+                    }
+                } catch (error) {
+                    showNotification('❌ Error al importar: ' + error.message);
+                }
+            };
+            
+            reader.readAsText(file);
+        };
+        
+        input.click();
+    }
+
+    // ========== FUNCIONES DE BÚSQUEDA ==========
+    function normalizeQuery(query) {
+        return query
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .replace(/[^a-z0-9\s]/g, '')
+            .trim();
+    }
+
+    function searchLocalFast(query) {
+        const normalized = normalizeQuery(query);
+        const results = [];
+        
+        // Buscar en base local oficial
+        Object.entries(localDatabase).forEach(([key, location]) => {
+            if (key.includes(normalized) || normalized.includes(key)) {
+                results.push({
+                    ...location,
+                    source: 'official',
+                    score: key === normalized ? 100 : 50
+                });
+            }
+        });
+        
+        // Buscar en ubicaciones aprobadas de usuarios
+        userLocations.approved.forEach(location => {
+            const searchable = normalizeQuery(location.name + ' ' + location.municipio + ' ' + location.departamento);
+            if (searchable.includes(normalized) || normalized.includes(searchable)) {
+                results.push({
+                    name: location.name,
+                    type: location.type,
+                    lat: location.lat,
+                    lon: location.lon,
+                    municipio: location.municipio,
+                    departamento: location.departamento,
+                    source: 'user_approved',
+                    addedBy: 'user',
+                    approved: true,
+                    score: 80
+                });
+            }
+        });
+        
+        return results.sort((a, b) => b.score - a.score);
+    }
+
+    async function searchAPI(query) {
+        const cacheKey = `api_${normalizeQuery(query)}`;
+        
+        if (searchCache.has(cacheKey)) {
+            return searchCache.get(cacheKey);
+        }
+        
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?` +
+                `q=${encodeURIComponent(query + ' Honduras')}` +
+                `&format=json&addressdetails=1&limit=20&countrycodes=hn` +
+                `&dedupe=1&bounded=1&viewbox=-89.5,12.0,-83.0,17.0`
+            );
+            
+            if (!response.ok) throw new Error('API Error');
+            
+            const data = await response.json();
+            const processed = processAPIData(data);
+            
+            searchCache.set(cacheKey, processed);
+            saveCacheToStorage();
+            updateCacheStatus();
+            
+            return processed;
+        } catch (error) {
+            console.error("API Error:", error);
+            return [];
+        }
+    }
+
+    function processAPIData(data) {
+        return data.map(item => {
+            const address = item.address || {};
+            
+            let type = 'ubicación';
+            if (item.type === 'administrative') {
+                if (address.city || address.town) type = 'municipio';
+                else if (address.state) type = 'departamento';
+            } else if (address.suburb) {
+                type = address.suburb.includes('Colonia') ? 'colonia' : 'barrio';
+            } else if (address.village) {
+                type = 'aldea';
+            } else if (address.hamlet) {
+                type = 'caserío';
+            }
+            
+            return {
+                name: item.display_name.split(',')[0],
+                type: type,
+                lat: parseFloat(item.lat),
+                lon: parseFloat(item.lon),
+                municipio: address.city || address.town || address.municipality || '',
+                departamento: address.state || address.county || '',
+                aldea: address.village || address.hamlet || '',
+                barrio_colonia: address.suburb || address.neighbourhood || '',
+                full_address: item.display_name,
+                source: 'api',
+                importance: item.importance || 0
+            };
         });
     }
 
-    function processSearch() {
-        const val = document.getElementById('mainSearch').value;
-        const resultsArea = document.getElementById('resultsContainer');
-        const rescueBtn = document.getElementById('rescueBtn');
+    function createGoogleMapsUrl(location) {
+        let searchQuery = '';
         
-        clearTimeout(searchTimer);
-        if (val.length < 3) { resultsArea.innerHTML = ''; rescueBtn.style.display = 'none'; return; }
-
-        rescueBtn.style.display = 'block';
-        rescueBtn.href = `https://www.google.com/maps/search/${encodeURIComponent(val + " Honduras")}`;
-
-        searchTimer = setTimeout(() => {
-            // Buscamos 100 resultados para atrapar a Tegucigalpa aunque se escriba 'galpa'
-            fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(val)}&limit=100`)
-            .then(res => res.json())
-            .then(data => {
-                resultsArea.innerHTML = '';
-                const term = val.toLowerCase();
-                
-                // Filtro para asegurar Honduras y búsqueda dentro del texto
-                const matches = data.features.filter(f => {
-                    const p = f.properties;
-                    const name = (p.name || "").toLowerCase();
-                    const city = (p.city || "").toLowerCase();
-                    const isHN = p.countrycode === "HN" || p.country === "Honduras";
-                    
-                    return isHN && (name.includes(term) || city.includes(term));
-                });
-
-                if (matches.length === 0) {
-                    resultsArea.innerHTML = '<div style="text-align:center; padding:20px; color:var(--granite);">Sin coincidencias.</div>';
-                    return;
-                }
-
-                matches.slice(0, 15).forEach(f => {
-                    const p = f.properties;
-                    const c = f.geometry.coordinates;
-                    const depto = p.state || "Honduras";
-                    const mun = p.city || p.county || "Ver Mapa";
-
-                    resultsArea.innerHTML += `
-                        <div class="location-card">
-                            <div class="info" onclick="window.open('https://www.google.com/maps/search/${encodeURIComponent(p.name + ' ' + mun + ' Honduras')}')">
-                                <span class="place-name">${p.name}</span>
-                                <div class="detail-row"><b>Depto:</b> ${depto}</div>
-                                <div class="detail-row"><b>Mun:</b> ${mun}</div>
-                            </div>
-                            <button class="btn-coords" onclick="event.stopPropagation(); copyToClipboard(this, ${c[1]}, ${c[0]})">📍 Coords</button>
-                        </div>`;
-                });
-            });
-        }, 300);
+        if (location.barrio_colonia) {
+            searchQuery = `${location.barrio_colonia}, `;
+        } else if (location.name) {
+            searchQuery = `${location.name}, `;
+        }
+        
+        if (location.municipio) {
+            searchQuery += `${location.municipio}, `;
+        }
+        
+        if (location.departamento) {
+            searchQuery += `${location.departamento}, `;
+        }
+        
+        searchQuery += 'Honduras';
+        
+        const encodedQuery = encodeURIComponent(searchQuery);
+        return `https://www.google.com/maps/search/?api=1&query=${encodedQuery}`;
     }
+
+    // ========== INTERFAZ Y EVENTOS ==========
+    let searchTimeout;
+    let lastQuery = '';
+    let isSearching = false;
+
+    document.getElementById('mainSearch').addEventListener('input', function(e) {
+        const query = e.target.value.trim();
+        if (query === lastQuery) return;
+        
+        clearTimeout(searchTimeout);
+        
+        if (query.length < 2) {
+            showEmptyState();
+            document.getElementById('mapSearchLink').style.display = 'none';
+            hideTelegramButton();
+            return;
+        }
+        
+        lastQuery = query;
+        document.getElementById('searchStatus').textContent = `Buscando: "${query}"`;
+        
+        const mapLink = document.getElementById('mapSearchLink');
+        mapLink.href = `https://www.google.com/maps/search/${encodeURIComponent(query + ' Honduras')}`;
+        mapLink.style.display = 'block';
+        
+        const localResults = searchLocalFast(query);
+        if (localResults.length > 0) {
+            displayResults(localResults, true);
+        }
+        
+        searchTimeout = setTimeout(() => {
+            performSearch(query);
+        }, 300);
+    });
+
+    async function performSearch(query) {
+        if (isSearching) return;
+        
+        isSearching = true;
+        showLoading();
+        
+        try {
+            const apiResults = await searchAPI(query);
+            const localResults = searchLocalFast(query);
+            const allResults = [...localResults, ...apiResults];
+            const uniqueResults = removeDuplicates(allResults);
+            
+            displayResults(uniqueResults, false);
+            
+            const fromCache = searchCache.has(`api_${normalizeQuery(query)}`);
+            document.getElementById('searchStatus').textContent = 
+                `${uniqueResults.length} resultados ${fromCache ? '(cache)' : '(en línea)'}`;
+                
+        } catch (error) {
+            document.getElementById('searchStatus').textContent = 'Error en búsqueda';
+        } finally {
+            isSearching = false;
+        }
+    }
+
+    function removeDuplicates(results) {
+        const seen = new Set();
+        const unique = [];
+        
+        results.forEach(item => {
+            const key = `${normalizeQuery(item.name)}_${item.lat.toFixed(3)}_${item.lon.toFixed(3)}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                unique.push(item);
+            }
+        });
+        
+        return unique.sort((a, b) => {
+            const aScore = (a.source === 'official' ? 100 : 0) + (a.importance || 0);
+            const bScore = (b.source === 'official' ? 100 : 0) + (b.importance || 0);
+            return bScore - aScore;
+        });
+    }
+
+    function showLoading() {
+        const container = document.getElementById('resultsContainer');
+        container.innerHTML = `
+            <div class="searching">
+                <div class="loader"></div>
+                <div>Buscando en servidores...</div>
+            </div>
+        `;
+    }
+
+    function showEmptyState() {
+        const container = document.getElementById('resultsContainer');
+        container.innerHTML = `
+            <div class="no-results">
+                <div class="no-results-icon">🔍</div>
+                <p>Escriba el nombre de una colonia, barrio o aldea</p>
+            </div>
+        `;
+        document.getElementById('searchStatus').textContent = 'Listo para buscar';
+        document.getElementById('resultsStats').style.display = 'none';
+    }
+
+    function displayResults(results, fromLocalOnly = false) {
+        const container = document.getElementById('resultsContainer');
+        const stats = document.getElementById('resultsStats');
+        
+        if (results.length === 0) {
+            container.innerHTML = `
+                <div class="no-results">
+                    <div class="no-results-icon">🤔</div>
+                    <p>No se encontraron resultados</p>
+                    ${fromLocalOnly ? '<p style="font-size:11px;color:var(--soft-mint)">Buscando en servidores en línea...</p>' : ''}
+                </div>
+            `;
+            stats.style.display = 'none';
+            return;
+        }
+        
+        const grouped = {};
+        results.forEach(item => {
+            const key = normalizeQuery(item.name);
+            if (!grouped[key]) grouped[key] = [];
+            grouped[key].push(item);
+        });
+        
+        let html = '';
+        let totalCards = 0;
+        
+        Object.entries(grouped).forEach(([name, locations]) => {
+            const isRepeated = locations.length > 1;
+            
+            locations.forEach((loc, index) => {
+                totalCards++;
+                
+                let identifier = '';
+                if (isRepeated && loc.municipio) {
+                    identifier = ` (${loc.municipio})`;
+                } else if (isRepeated) {
+                    identifier = ` #${index + 1}`;
+                }
+                
+                const mapUrl = createGoogleMapsUrl(loc);
+                const isUserAdded = loc.source === 'user_approved';
+                
+                html += `
+                    <div class="location-card ${isRepeated ? 'repeated' : ''} ${isUserAdded ? 'user-added' : ''}" 
+                         onclick="window.open('${mapUrl}', '_blank')">
+                        
+                        ${isUserAdded ? '<div class="user-added-badge">USUARIO</div>' : ''}
+                        
+                        <span class="location-type">${loc.type}</span>
+                        
+                        <span class="place-name">
+                            ${loc.name}${identifier}
+                            ${loc.source === 'official' ? '<span style="font-size:10px;color:var(--success);margin-left:5px;">⚡</span>' : ''}
+                            ${isUserAdded ? '<span style="font-size:10px;color:var(--purple);margin-left:5px;">👤</span>' : ''}
+                        </span>
+                        
+                        <div class="location-hierarchy">
+                            ${loc.municipio ? `
+                                <div class="hierarchy-item">
+                                    <span class="hierarchy-label">Municipio:</span>
+                                    <span class="hierarchy-value">${loc.municipio}</span>
+                                </div>
+                            ` : ''}
+                            
+                            ${loc.departamento ? `
+                                <div class="hierarchy-item">
+                                    <span class="hierarchy-label">Departamento:</span>
+                                    <span class="hierarchy-value">${loc.departamento}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="coordinates-row">
+                            <span class="coords-display">
+                                📍 ${loc.lat.toFixed(6)}, ${loc.lon.toFixed(6)}
+                            </span>
+                            
+                            <div class="action-buttons">
+                                <button class="btn-action btn-map" 
+                                        onclick="event.stopPropagation(); window.open('${mapUrl}', '_blank')">
+                                    🗺️ Ver en Maps
+                                </button>
+                                <button class="btn-action btn-copy" 
+                                        onclick="event.stopPropagation(); copyCoords(${loc.lat}, ${loc.lon}, this)">
+                                    📋 Copiar
+                                </button>
+                            </div>
+                        </div>
+                        
+                        ${isRepeated ? `
+                            <div class="warning-note">
+                                ⚠️ ${locations.length} ubicaciones con este nombre
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+        });
+        
+        container.innerHTML = html;
+        
+        const uniqueNames = Object.keys(grouped).length;
+        stats.innerHTML = `
+            ${totalCards} ubicaciones • ${uniqueNames} nombres diferentes<br>
+            <small>⚡ = oficial | 👤 = usuario</small>
+        `;
+        stats.style.display = 'block';
+    }
+
+    function copyCoords(lat, lon, button) {
+        const text = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+        navigator.clipboard.writeText(text).then(() => {
+            const originalText = button.innerHTML;
+            button.innerHTML = '✅ Copiado';
+            button.classList.add('success');
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.classList.remove('success');
+            }, 1500);
+        });
+    }
+
+    function updateCacheStatus() {
+        const status = document.getElementById('cacheStatus');
+        status.textContent = `Cache: ${searchCache.size} búsquedas`;
+        status.className = 'cache-indicator';
+    }
+
+    function setupQuickFilters() {
+        const filters = [
+            {text: "Colonias Populares", search: "Colonia"},
+            {text: "Barrios", search: "Barrio"},
+            {text: "Municipios", search: "Municipio Honduras"},
+            {text: "Aldeas", search: "Aldea Honduras"},
+            {text: "Tegucigalpa", search: "Tegucigalpa"},
+            {text: "San Pedro Sula", search: "San Pedro Sula"},
+            {text: "La Ceiba", search: "La Ceiba"}
+        ];
+        
+        const container = document.getElementById('quickFilters');
+        filters.forEach(filter => {
+            const btn = document.createElement('button');
+            btn.className = 'quick-filter';
+            btn.textContent = filter.text;
+            btn.onclick = () => {
+                document.getElementById('mainSearch').value = filter.search;
+                document.getElementById('mainSearch').dispatchEvent(new Event('input'));
+            };
+            container.appendChild(btn);
+        });
+    }
+
+    // ========== INICIALIZAR APLICACIÓN ==========
+    initializeApp();
 </script>
 </body>
 </html>
