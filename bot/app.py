@@ -4,6 +4,7 @@ import json
 import base64
 import requests
 from datetime import datetime
+import uuid  # <-- AHORA SÍ ESTÁ IMPORTADO
 
 app = Flask(__name__)
 
@@ -23,6 +24,7 @@ def home():
 @app.route('/webhook', methods=['POST'])
 def telegram_webhook():
     """Webhook para Telegram"""
+    print("📥 Webhook recibido de Telegram")  # Debug
     data = request.json
     
     # Manejar mensajes de texto
@@ -53,13 +55,10 @@ def telegram_webhook():
                 "1. El bot recibe solicitudes del formulario web\n"
                 "2. Aparecerán con botones para aprobar/rechazar\n"
                 "3. Usa los botones para gestionar las solicitudes")
-        
-        # Si es una solicitud (texto plano) - compatibilidad con versión anterior
-        elif 'NUEVA SOLICITUD' in message:
-            handle_new_request_legacy(message, chat_id)
     
     # Manejar botones inline (callback_query)
     elif 'callback_query' in data:
+        print("🔄 Botón presionado en Telegram")  # Debug
         callback = data['callback_query']
         chat_id = callback['message']['chat']['id']
         message_id = callback['message']['message_id']
@@ -71,14 +70,17 @@ def telegram_webhook():
         # Procesar las acciones
         if callback_data.startswith('approve_'):
             request_id = callback_data.split('_')[1]
+            print(f"✅ Aprobando solicitud {request_id}")  # Debug
             handle_approval_button(request_id, chat_id, message_id)
             
         elif callback_data.startswith('reject_'):
             request_id = callback_data.split('_')[1]
+            print(f"❌ Rechazando solicitud {request_id}")  # Debug
             handle_rejection_button(request_id, chat_id, message_id)
             
         elif callback_data.startswith('copy_'):
             request_id = callback_data.split('_')[1]
+            print(f"📋 Copiando coordenadas {request_id}")  # Debug
             handle_copy_coords(request_id, callback['id'])
     
     return jsonify({"status": "ok"})
@@ -86,12 +88,19 @@ def telegram_webhook():
 @app.route('/send-notification', methods=['POST'])
 def send_notification():
     """Endpoint para que tu HTML envíe solicitudes"""
+    print("🔔 Recibiendo solicitud de notificación...")  # Debug
+    print(f"📦 Datos recibidos: {request.json}")  # Debug
+    
     data = request.json
     location = data.get('location')
     chat_id = data.get('telegram_chat_id')
     
     if not location or not chat_id:
+        print("❌ Error: Datos incompletos")  # Debug
         return jsonify({"error": "Datos incompletos"}), 400
+    
+    print(f"📍 Ubicación: {location.get('name')}")  # Debug
+    print(f"👤 Chat ID: {chat_id}")  # Debug
     
     # Guardar solicitud pendiente
     import time
@@ -101,12 +110,15 @@ def send_notification():
         'chat_id': chat_id
     }
     
+    print(f"🆔 Request ID generado: {request_id}")  # Debug
+    
     # Crear URL para Google Maps
     try:
         coords = location['coords'].split(',')
         lat = coords[0].strip()
         lon = coords[1].strip()
         maps_url = f"https://www.google.com/maps?q={lat},{lon}"
+        print(f"🗺️ URL Maps: {maps_url}")  # Debug
     except:
         maps_url = f"https://www.google.com/maps/search/{location['name']}"
     
@@ -151,17 +163,29 @@ def send_notification():
         ]
     }
     
+    print("📤 Enviando mensaje a Telegram con botones...")  # Debug
+    
     # Enviar a Telegram con botones
     success = send_telegram(chat_id, message, keyboard)
     
     if success:
-        return jsonify({"success": True, "request_id": request_id})
+        print("✅ Mensaje enviado exitosamente a Telegram")  # Debug
+        return jsonify({
+            "success": True, 
+            "request_id": request_id,
+            "message": "Solicitud enviada a Telegram"
+        })
     else:
-        return jsonify({"error": "No se pudo enviar a Telegram"}), 500
+        print("❌ Error enviando a Telegram")  # Debug
+        return jsonify({
+            "error": "No se pudo enviar a Telegram",
+            "details": "Verifica el token de Telegram y el chat ID"
+        }), 500
 
 @app.route('/approve/<request_id>', methods=['GET'])
 def approve_route(request_id):
     """Ruta para aprobar desde un enlace (útil para móvil)"""
+    print(f"🌐 Aprobando vía URL: {request_id}")  # Debug
     if request_id in pending_requests:
         data = pending_requests[request_id]
         success = update_github(data['location'])
@@ -177,6 +201,7 @@ def approve_route(request_id):
 
 def handle_approval_button(request_id, chat_id, message_id):
     """Manejar aprobación desde botón"""
+    print(f"🔄 Procesando aprobación: {request_id}")  # Debug
     if request_id in pending_requests:
         data = pending_requests[request_id]
         success = update_github(data['location'])
@@ -191,14 +216,18 @@ def handle_approval_button(request_id, chat_id, message_id):
             send_telegram(chat_id, f"✅ *{data['location']['name']}* aprobada y agregada a GitHub!")
             
             del pending_requests[request_id]
+            print(f"✅ Solicitud {request_id} aprobada y eliminada")  # Debug
         else:
             edit_message(chat_id, message_id, "❌ Error al actualizar GitHub")
             answer_callback_query(chat_id, "❌ Error al actualizar GitHub")
+            print(f"❌ Error actualizando GitHub para {request_id}")  # Debug
     else:
         edit_message(chat_id, message_id, "❌ Solicitud no encontrada o ya procesada")
+        print(f"⚠️ Solicitud {request_id} no encontrada")  # Debug
 
 def handle_rejection_button(request_id, chat_id, message_id):
     """Manejar rechazo desde botón"""
+    print(f"🔄 Procesando rechazo: {request_id}")  # Debug
     if request_id in pending_requests:
         data = pending_requests[request_id]
         
@@ -208,79 +237,27 @@ def handle_rejection_button(request_id, chat_id, message_id):
                     f"*{data['location']['name']}* ha sido rechazada.")
         
         del pending_requests[request_id]
+        print(f"❌ Solicitud {request_id} rechazada y eliminada")  # Debug
     else:
         edit_message(chat_id, message_id, "❌ Solicitud no encontrada")
+        print(f"⚠️ Solicitud {request_id} no encontrada")  # Debug
 
 def handle_copy_coords(request_id, callback_id):
     """Manejar copia de coordenadas"""
+    print(f"📋 Copiando coordenadas: {request_id}")  # Debug
     if request_id in pending_requests:
         data = pending_requests[request_id]
         coords = data['location']['coords']
         
         # Mostrar alerta con las coordenadas
         answer_callback_query(callback_id, f"📋 Coordenadas:\n`{coords}`\n\n(Copia manualmente)")
+        print(f"📋 Mostrando coordenadas: {coords}")  # Debug
     else:
         answer_callback_query(callback_id, "❌ Solicitud no encontrada")
 
-def handle_new_request_legacy(message, chat_id):
-    """Procesar nueva solicitud (para webhook directo - versión anterior)"""
-    lines = message.split('\n')
-    location = {}
-    
-    for line in lines:
-        if '*Nombre:*' in line:
-            location['name'] = line.split('*Nombre:*')[1].strip()
-        elif '*Coordenadas:*' in line:
-            location['coords'] = line.split('*Coordenadas:*')[1].strip().replace('`', '')
-        elif '*Municipio:*' in line:
-            location['municipio'] = line.split('*Municipio:*')[1].strip()
-        elif '*Departamento:*' in line:
-            location['departamento'] = line.split('*Departamento:*')[1].strip()
-        elif '*Tipo:*' in line:
-            location['type'] = line.split('*Tipo:*')[1].strip()
-    
-    if location.get('name'):
-        import time
-        request_id = str(int(time.time()))
-        pending_requests[request_id] = {
-            'location': location,
-            'chat_id': chat_id
-        }
-        
-        # Crear URL para Google Maps
-        try:
-            coords = location['coords'].split(',')
-            lat = coords[0].strip()
-            lon = coords[1].strip()
-            maps_url = f"https://www.google.com/maps?q={lat},{lon}"
-        except:
-            maps_url = f"https://www.google.com/maps/search/{location['name']}"
-        
-        # Crear teclado inline
-        keyboard = {
-            "inline_keyboard": [
-                [
-                    {"text": "✅ Aprobar", "callback_data": f"approve_{request_id}"},
-                    {"text": "❌ Rechazar", "callback_data": f"reject_{request_id}"}
-                ],
-                [
-                    {"text": "🗺️ Ver en Maps", "url": maps_url}
-                ]
-            ]
-        }
-        
-        send_telegram(chat_id,
-            f"📍 *Nueva Solicitud*\n\n"
-            f"*{location['name']}*\n"
-            f"📍 Coordenadas: `{location['coords']}`\n"
-            f"🏙️ Municipio: {location.get('municipio', 'No especificado')}\n"
-            f"🏛️ Departamento: {location.get('departamento', 'No especificado')}\n"
-            f"📌 Tipo: {location.get('type', 'colonia')}\n\n"
-            f"🆔 ID: `{request_id}`",
-            keyboard)
-
 def show_pending_requests(chat_id):
     """Mostrar solicitudes pendientes"""
+    print(f"📋 Mostrando solicitudes pendientes para chat: {chat_id}")  # Debug
     user_requests = {k: v for k, v in pending_requests.items() if v['chat_id'] == chat_id}
     
     if not user_requests:
@@ -297,9 +274,11 @@ def show_pending_requests(chat_id):
         message += f"   🏙️: {loc.get('municipio', 'N/A')}\n\n"
     
     send_telegram(chat_id, message)
+    print(f"📤 Enviadas {len(user_requests)} solicitudes pendientes")  # Debug
 
 def update_github(location):
     """Actualizar GitHub automáticamente"""
+    print(f"🔄 Actualizando GitHub con: {location['name']}")  # Debug
     try:
         # 1. Obtener archivo actual
         url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_FILE}"
@@ -340,6 +319,8 @@ def update_github(location):
             key = f"{original_key}_{counter}"
             counter += 1
         
+        print(f"🔑 Clave generada para GitHub: {key}")  # Debug
+        
         # 4. Agregar nueva entrada CON DATOS DETECTADOS
         current_json[key] = {
             "name": name,
@@ -365,10 +346,12 @@ def update_github(location):
             "sha": file_data['sha']
         })
         
-        return update_response.status_code == 200
+        success = update_response.status_code == 200
+        print(f"📤 GitHub update status: {success}")  # Debug
+        return success
         
     except Exception as e:
-        print(f"Error GitHub: {e}")
+        print(f"❌ Error GitHub: {e}")  # Debug
         return False
 
 def send_telegram(chat_id, text, reply_markup=None):
@@ -386,10 +369,16 @@ def send_telegram(chat_id, text, reply_markup=None):
         if reply_markup:
             data["reply_markup"] = reply_markup
         
+        print(f"📤 Enviando a Telegram: {chat_id}")  # Debug
         response = requests.post(url, json=data)
+        
+        print(f"📨 Respuesta Telegram: {response.status_code}")  # Debug
+        if response.status_code != 200:
+            print(f"❌ Error Telegram: {response.text}")  # Debug
+        
         return response.status_code == 200
     except Exception as e:
-        print(f"Error enviando mensaje: {e}")
+        print(f"❌ Error enviando mensaje: {e}")  # Debug
         return False
 
 def answer_callback_query(callback_id, text=None, show_alert=True):
@@ -405,7 +394,7 @@ def answer_callback_query(callback_id, text=None, show_alert=True):
         requests.post(url, json=data)
         return True
     except Exception as e:
-        print(f"Error answering callback: {e}")
+        print(f"❌ Error answering callback: {e}")
         return False
 
 def edit_message(chat_id, message_id, new_text, reply_markup=None):
@@ -425,10 +414,11 @@ def edit_message(chat_id, message_id, new_text, reply_markup=None):
         response = requests.post(url, json=data)
         return response.status_code == 200
     except Exception as e:
-        print(f"Error editando mensaje: {e}")
+        print(f"❌ Error editando mensaje: {e}")
         return False
 
 if __name__ == '__main__':
     # Configurar puerto para Render
     port = int(os.environ.get('PORT', 10000))
+    print(f"🚀 Iniciando servidor en puerto {port}")  # Debug
     app.run(host='0.0.0.0', port=port)
