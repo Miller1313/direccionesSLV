@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buscador HN - Instantáneo</title>
+    <title>Buscador Honduras - Instantáneo</title>
     <style>
         :root {
             --blue-sky: #70c4f4;
@@ -647,28 +647,22 @@
 </div>
 
 <script>
-    // ========== CONFIGURACIÓN DEL SISTEMA ==========
+    // ========== CONFIGURACIÓN QUE DEBES MODIFICAR ==========
+    // === LÍNEA 682: CAMBIA ESTOS VALORES ===
+    const TELEGRAM_BOT_TOKEN = '8554913344:AAFx8KcrJhXDLuB7ufOXhVqf9y8CqtzjLW4';  // Reemplaza con tu token real
+    const TELEGRAM_CHAT_ID = '5770086010';      // Reemplaza con tu chat ID
+    const RENDER_APP_URL = 'https://tu-app-en-render.onrender.com'; // URL de tu app en Render
+    
+    // === LÍNEA 688: Tu repositorio de GitHub ===
+    const GITHUB_USER = 'tu_usuario_github';         // Tu nombre de usuario de GitHub
+    const GITHUB_REPO = 'tu_repositorio';            // Nombre de tu repositorio
     
     // ========== ALMACENAMIENTO ==========
     const searchCache = new Map();
     const CACHE_DURATION = 24 * 60 * 60 * 1000;
     
-    // Base de datos local simplificada
+    // Base de datos local
     let localDatabase = {};
-
-    // Cargar base de datos desde GitHub
-    async function loadDatabaseFromGitHub() {
-        try {
-            const response = await fetch('https://raw.githubusercontent.com/tu_usuario/tu_repositorio/main/locations.json');
-            if (response.ok) {
-                const data = await response.json();
-                localDatabase = data;
-                console.log('Base de datos cargada desde GitHub:', Object.keys(data).length, 'ubicaciones');
-            }
-        } catch (error) {
-            console.error('Error cargando base de datos:', error);
-        }
-    }
 
     // ========== FUNCIONES DE CACHE ==========
     function loadCacheFromStorage() {
@@ -709,6 +703,31 @@
         }
     }
 
+    // ========== CARGAR BASE DE DATOS DESDE GITHUB ==========
+    async function loadDatabaseFromGitHub() {
+        try {
+            const response = await fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/locations.json`);
+            if (response.ok) {
+                const data = await response.json();
+                localDatabase = data;
+                console.log('Base de datos cargada:', Object.keys(data).length, 'ubicaciones');
+                updateCacheStatus();
+            } else {
+                console.log('Usando base de datos local inicial');
+                // Base de datos inicial por defecto
+                localDatabase = {
+                    "colonia_kennedy": { name: "Colonia Kennedy", lat: 14.0833, lon: -87.1833, municipio: "Tegucigalpa", departamento: "Francisco Morazán", type: "colonia" },
+                    "colonia_satelite": { name: "Colonia Satélite", lat: 15.5200, lon: -88.0400, municipio: "San Pedro Sula", departamento: "Cortés", type: "colonia" },
+                    "colonia_palmira": { name: "Colonia Palmira", lat: 14.1000, lon: -87.2000, municipio: "Tegucigalpa", departamento: "Francisco Morazán", type: "colonia" },
+                    "san_pedro_sula": { name: "San Pedro Sula", lat: 15.5000, lon: -88.0300, municipio: "San Pedro Sula", departamento: "Cortés", type: "municipio" },
+                    "tegucigalpa": { name: "Tegucigalpa", lat: 14.0818, lon: -87.2068, municipio: "Tegucigalpa", departamento: "Francisco Morazán", type: "municipio" }
+                };
+            }
+        } catch (error) {
+            console.error('Error cargando base de datos:', error);
+        }
+    }
+
     // ========== INICIALIZACIÓN ==========
     async function initializeApp() {
         loadCacheFromStorage();
@@ -730,7 +749,7 @@
         const normalized = normalizeQuery(query);
         const results = [];
         
-        // Buscar en base local oficial
+        // Buscar en base local
         Object.entries(localDatabase).forEach(([key, location]) => {
             if (key.includes(normalized) || normalized.includes(key) || 
                 location.name.toLowerCase().includes(normalized)) {
@@ -1052,7 +1071,8 @@
 
     function updateCacheStatus() {
         const status = document.getElementById('cacheStatus');
-        status.textContent = `Cache: ${searchCache.size} búsquedas`;
+        const totalLocations = Object.keys(localDatabase).length;
+        status.textContent = `Cache: ${searchCache.size} búsquedas • ${totalLocations} ubicaciones`;
         status.className = 'cache-indicator';
     }
 
@@ -1088,10 +1108,6 @@
     const form = document.getElementById('locationForm');
     const successMessage = document.getElementById('successMessage');
 
-    // Configuración del Bot de Telegram (REEMPLAZA ESTO)
-    const TELEGRAM_BOT_TOKEN = '8554913344:AAFx8KcrJhXDLuB7ufOXhVqf9y8CqtzjLW4'; // Reemplaza con tu token
-    const TELEGRAM_CHAT_ID = '5770086010'; // Tu chat ID de Telegram
-
     openBtn.addEventListener('click', () => {
         modal.style.display = 'flex';
         form.reset();
@@ -1112,9 +1128,32 @@
         }
     });
 
-    // Enviar solicitud a Telegram
+    // ========== FUNCIÓN PARA ENVIAR A TELEGRAM ==========
     async function sendToTelegram(locationData) {
         try {
+            // Método 1: Intentar enviar a través de Render
+            if (RENDER_APP_URL && RENDER_APP_URL !== 'https://tu-app-en-render.onrender.com') {
+                try {
+                    const response = await fetch(`${RENDER_APP_URL}/send-notification`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            location: locationData,
+                            telegram_chat_id: TELEGRAM_CHAT_ID
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        return true;
+                    }
+                } catch (error) {
+                    console.log('Fallando a método directo:', error);
+                }
+            }
+            
+            // Método 2: Envío directo a Telegram API
             const message = `📍 *NUEVA SOLICITUD DE DIRECCIÓN*
 
 *Nombre:* ${locationData.name}
@@ -1124,11 +1163,10 @@
 *Tipo:* ${locationData.type}
 
 *Para aprobar, responde:*
-✅ aprobar_${btoa(JSON.stringify(locationData))}
+✅ aprobar
 *Para rechazar:*
-❌ rechazar_${locationData.name}`;
+❌ rechazar`;
 
-            // Usar Telegram Bot API
             const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
             
             const response = await fetch(url, {
@@ -1143,18 +1181,14 @@
                 })
             });
 
-            if (!response.ok) {
-                throw new Error('Error enviando a Telegram');
-            }
-
-            return true;
+            return response.ok;
         } catch (error) {
-            console.error('Error Telegram:', error);
+            console.error('Error enviando a Telegram:', error);
             return false;
         }
     }
 
-    // Manejar envío del formulario
+    // ========== MANEJAR ENVÍO DEL FORMULARIO ==========
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -1178,7 +1212,7 @@
                 throw new Error('Formato de coordenadas inválido. Use: lat, lon');
             }
             
-            // Validar que la lat/lon estén en Honduras
+            // Validar que la lat/lon estén en Honduras (aproximadamente)
             const lat = parseFloat(coords[0]);
             const lon = parseFloat(coords[1]);
             if (lat < 12.0 || lat > 17.0 || lon > -83.0 || lon < -89.5) {
@@ -1191,7 +1225,7 @@
             const sent = await sendToTelegram(locationData);
             
             if (sent) {
-                successMessage.textContent = '✅ Solicitud enviada a Telegram para aprobación';
+                successMessage.textContent = '✅ Solicitud enviada para aprobación';
                 successMessage.style.display = 'block';
                 submitBtn.innerHTML = '✅ ¡Enviado!';
                 
@@ -1202,7 +1236,7 @@
                     submitBtn.disabled = false;
                 }, 2000);
             } else {
-                throw new Error('No se pudo enviar a Telegram');
+                throw new Error('No se pudo enviar la solicitud');
             }
             
         } catch (error) {
@@ -1212,8 +1246,21 @@
         }
     });
 
+    // ========== FUNCIÓN PARA ACTUALIZAR BASE DE DATOS ==========
+    async function refreshDatabase() {
+        await loadDatabaseFromGitHub();
+        const currentQuery = document.getElementById('mainSearch').value.trim();
+        if (currentQuery.length >= 2) {
+            performSearch(currentQuery);
+        }
+        alert('✅ Base de datos actualizada');
+    }
+
     // ========== INICIALIZAR APLICACIÓN ==========
     initializeApp();
+    
+    // Hacer refreshDatabase accesible globalmente
+    window.refreshDatabase = refreshDatabase;
 </script>
 </body>
 </html>
