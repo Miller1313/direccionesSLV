@@ -662,7 +662,6 @@ def update_github_file(location):
             lat = 0.0
             lon = 0.0
         
-        # En el archivo app.py, busca la función update_github_file() y modifica el diccionario:
         current_json[key] = {
             "name": name,
             "lat": lat,
@@ -672,7 +671,7 @@ def update_github_file(location):
             "type": location.get('type', 'colonia'),
             "added": datetime.now().isoformat(),
             "approved": True,
-            "source": "user_submission",  # ESTA LÍNEA ES CRÍTICA
+            "source": "user_submission",
             "detected_automatically": True,
             "full_address": location.get('detected', '')
         }
