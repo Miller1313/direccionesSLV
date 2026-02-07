@@ -168,44 +168,66 @@ def handle_new_request(message, chat_id):
 def update_github(location):
     """Actualizar GitHub automáticamente"""
     try:
-        # URL del archivo en GitHub
-        url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/locations.json"
+        # 1. Obtener archivo actual
+        url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_FILE}"
         headers = {
             "Authorization": f"token {GITHUB_TOKEN}",
             "Accept": "application/vnd.github.v3+json"
         }
         
-        # Obtener archivo actual
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         file_data = response.json()
         
-        # Decodificar contenido
+        # 2. Decodificar contenido
         current_content = base64.b64decode(file_data['content']).decode('utf-8')
         current_json = json.loads(current_content)
         
-        # Crear clave única
-        key = location['name'].lower().replace(' ', '_').replace('ñ', 'n')[:50]
+        # 3. Crear clave única
+        name = location['name']
+        key = name.lower()\
+            .replace(' ', '_')\
+            .replace('ñ', 'n')\
+            .replace('á', 'a')\
+            .replace('é', 'e')\
+            .replace('í', 'i')\
+            .replace('ó', 'o')\
+            .replace('ú', 'u')\
+            .replace('ü', 'u')\
+            .replace(' ', '_')\
+            .replace('-', '_')\
+            .replace('.', '')\
+            .replace(',', '')\
+            .replace("'", '')
         
-        # Agregar nueva entrada
+        # Si la clave ya existe, agregar sufijo
+        original_key = key
+        counter = 1
+        while key in current_json:
+            key = f"{original_key}_{counter}"
+            counter += 1
+        
+        # 4. Agregar nueva entrada CON DATOS DETECTADOS
         current_json[key] = {
-            "name": location['name'],
+            "name": name,
             "lat": float(location['coords'].split(',')[0].strip()),
             "lon": float(location['coords'].split(',')[1].strip()),
-            "municipio": location.get('municipio', ''),
-            "departamento": location.get('departamento', ''),
+            "municipio": location.get('municipio', 'Por determinar'),
+            "departamento": location.get('departamento', 'Por determinar'),
             "type": location.get('type', 'colonia'),
             "added": datetime.now().isoformat(),
             "approved": True,
-            "source": "user_submission"
+            "source": "user_submission",
+            "detected_automatically": True,
+            "full_address": location.get('detected', '')
         }
         
-        # Subir cambios
+        # 5. Subir cambios
         new_content = json.dumps(current_json, indent=2, ensure_ascii=False)
         new_content_b64 = base64.b64encode(new_content.encode('utf-8')).decode('utf-8')
         
         update_response = requests.put(url, headers=headers, json={
-            "message": f"📍 Agregar: {location['name']}",
+            "message": f"📍 Agregar: {name} ({location.get('municipio', '')})",
             "content": new_content_b64,
             "sha": file_data['sha']
         })
