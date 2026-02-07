@@ -1,6 +1,0 @@
-# Tokens y configuraciones
-TELEGRAM_BOT_TOKEN=8554913344:AAFx8KcrJhXDLuB7ufOXhVqf9y8CqtzjLW4
-ADMIN_CHAT_ID=5770086010
-GITHUB_TOKEN=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
-GITHUB_REPO=https://miller1313.github.io/direccionesSLV/
-PORT=3000
