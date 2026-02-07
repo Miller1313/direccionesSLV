@@ -793,22 +793,24 @@
     }
 
     // ========== FUNCIONES DE BÚSQUEDA ==========
-    function normalizeQuery(query) {
-        return query
-            .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-            .toLowerCase()
-            .replace(/[^a-z0-9\s]/g, '')
-            .trim();
-    }
+    // Reemplaza la función normalizeQuery() (alrededor de la línea 165) con esta versión mejorada:
+function normalizeQuery(query) {
+    if (!query) return '';
+    
+    return query
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+}
 
-    function searchLocalFast(query) {
+// Ahora reemplaza la función searchLocalFast() completamente:
+function searchLocalFast(query) {
     const normalized = normalizeQuery(query);
     const results = [];
     
-    // NUEVA FUNCIONALIDAD: Si la búsqueda es "user_submission", mostrar todas las agregadas por usuarios
-    if (normalized === "user_submission") {
+    // Caso especial: mostrar todas las agregadas por usuarios
+    if (normalized === "user_submission" || normalized === "agregadas por usuarios") {
         Object.entries(localDatabase).forEach(([key, location]) => {
-            // Verificar si es una ubicación agregada por usuario
             if (location.source === "user_submission" || location.approved === true) {
                 results.push({
                     ...location,
@@ -817,6 +819,86 @@
                 });
             }
         });
+        
+        return results.sort((a, b) => {
+            const dateA = a.added ? new Date(a.added) : new Date(0);
+            const dateB = b.added ? new Date(b.added) : new Date(0);
+            return dateB - dateA;
+        });
+    }
+    
+    // Búsqueda inteligente: dividir en palabras y buscar coincidencias
+    const searchTerms = normalized.split(/\s+/).filter(term => term.length > 2);
+    
+    Object.entries(localDatabase).forEach(([key, location]) => {
+        let score = 0;
+        const locationName = normalizeQuery(location.name);
+        const municipio = normalizeQuery(location.municipio || '');
+        const departamento = normalizeQuery(location.departamento || '');
+        
+        // Si no hay términos de búsqueda o son muy cortos, devolver todo
+        if (searchTerms.length === 0) {
+            return;
+        }
+        
+        // Calcular puntaje basado en coincidencias
+        searchTerms.forEach(term => {
+            // Coincidencia exacta en el nombre
+            if (locationName === term) score += 100;
+            
+            // El término está contenido en el nombre
+            if (locationName.includes(term)) score += 30;
+            
+            // Coincidencia en municipio
+            if (municipio.includes(term)) score += 20;
+            
+            // Coincidencia en departamento
+            if (departamento.includes(term)) score += 10;
+            
+            // Coincidencia en la clave
+            if (key.includes(term)) score += 40;
+        });
+        
+        // También considerar coincidencia parcial sin dividir en palabras
+        if (locationName.includes(normalized)) {
+            score += 50;
+        }
+        
+        // Si hay puntaje, agregar a resultados
+        if (score > 0) {
+            results.push({
+                ...location,
+                source: 'official',
+                score: score
+            });
+        }
+    });
+    
+    // También buscar en la API si no hay resultados locales
+    return results.sort((a, b) => b.score - a.score);
+}
+
+// Además, mejora la función removeDuplicates() para que conserve mejor los resultados:
+function removeDuplicates(results) {
+    const seen = new Set();
+    const unique = [];
+    
+    results.forEach(item => {
+        // Usar una clave más flexible para detectar duplicados
+        const key = `${normalizeQuery(item.name).substring(0, 20)}_${item.lat.toFixed(2)}_${item.lon.toFixed(2)}`;
+        if (!seen.has(key)) {
+            seen.add(key);
+            unique.push(item);
+        }
+    });
+    
+    return unique.sort((a, b) => {
+        // Priorizar: 1. source=official, 2. score alto, 3. importance alto
+        const aScore = (a.source === 'official' ? 200 : 0) + (a.score || 0) + (a.importance || 0);
+        const bScore = (b.source === 'official' ? 200 : 0) + (b.score || 0) + (b.importance || 0);
+        return bScore - aScore;
+    });
+}
         
         // Ordenar por fecha de adición (más recientes primero)
         return results.sort((a, b) => {
