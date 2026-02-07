@@ -11,6 +11,7 @@ app = Flask(__name__)
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
 GITHUB_REPO = os.getenv('GITHUB_REPO')
+GITHUB_FILE = 'locations.json'
 
 # Almacenamiento simple en memoria (en producción usa Redis o DB)
 pending_requests = {}
