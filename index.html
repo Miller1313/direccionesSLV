@@ -550,36 +550,36 @@
         }
 
         .detected-info {
-    margin: 15px 0;
-    animation: fadeIn 0.5s ease;
-    }
+            margin: 15px 0;
+            animation: fadeIn 0.5s ease;
+        }
 
-    .coordinates-example a {
-        color: var(--soft-mint);
-        text-decoration: none;
-        font-weight: bold;
-    }
+        .coordinates-example a {
+            color: var(--soft-mint);
+            text-decoration: none;
+            font-weight: bold;
+        }
 
-    .coordinates-example a:hover {
-        text-decoration: underline;
-    }
+        .coordinates-example a:hover {
+            text-decoration: underline;
+        }
 
-    .loading-detection {
-        text-align: center;
-        padding: 15px;
-        color: var(--soft-mint);
-    }
+        .loading-detection {
+            text-align: center;
+            padding: 15px;
+            color: var(--soft-mint);
+        }
 
-    .loading-detection .loader-small {
-        width: 20px;
-        height: 20px;
-        border: 2px solid var(--pine);
-        border-top: 2px solid var(--soft-mint);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        display: inline-block;
-        margin-right: 10px;
-    }
+        .loading-detection .loader-small {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--pine);
+            border-top: 2px solid var(--soft-mint);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
@@ -693,14 +693,16 @@
 
 <script>
     // ========== CONFIGURACIÓN QUE DEBES MODIFICAR ==========
-    // === LÍNEA 682: CAMBIA ESTOS VALORES ===
-    const TELEGRAM_BOT_TOKEN = '8554913344:AAFx8KcrJhXDLuB7ufOXhVqf9y8CqtzjLW4';  // Reemplaza con tu token real
-    const TELEGRAM_CHAT_ID = '5770086010';      // Reemplaza con tu chat ID
-    const RENDER_APP_URL = 'https://direccionesslv-izev.onrender.com'; // URL de tu app en Render
+    const TELEGRAM_BOT_TOKEN = '8554913344:AAFx8KcrJhXDLuB7ufOXhVqf9y8CqtzjLW4';  // Tu token de Telegram
+    const TELEGRAM_CHAT_ID = '5770086010';      // Tu chat ID de Telegram
     
-    // === LÍNEA 688: Tu repositorio de GitHub ===
+    // IMPORTANTE: Usamos window.location.origin para que funcione en cualquier dominio
+    // Esto detectará automáticamente si estás en localhost o en Render
+    const RENDER_APP_URL = window.location.origin; // Cambia esta línea
+    
+    // Tu repositorio de GitHub
     const GITHUB_USER = 'Miller1313';         // Tu nombre de usuario de GitHub
-    const GITHUB_REPO = 'direccionesSLV';            // Nombre de tu repositorio
+    const GITHUB_REPO = 'direccionesSLV';     // Nombre de tu repositorio
     
     // ========== ALMACENAMIENTO ==========
     const searchCache = new Map();
@@ -751,25 +753,65 @@
     // ========== CARGAR BASE DE DATOS DESDE GITHUB ==========
     async function loadDatabaseFromGitHub() {
         try {
+            // Usar raw.githubusercontent.com para obtener el archivo JSON
             const response = await fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/locations.json`);
+            
             if (response.ok) {
                 const data = await response.json();
                 localDatabase = data;
-                console.log('Base de datos cargada:', Object.keys(data).length, 'ubicaciones');
+                console.log('✅ Base de datos cargada:', Object.keys(data).length, 'ubicaciones');
                 updateCacheStatus();
             } else {
-                console.log('Usando base de datos local inicial');
-                // Base de datos inicial por defecto
+                console.warn('⚠️ No se pudo cargar la base de datos de GitHub');
+                
+                // Base de datos inicial por defecto como respaldo
                 localDatabase = {
-                    "colonia_kennedy": { name: "Colonia Kennedy", lat: 14.0833, lon: -87.1833, municipio: "Tegucigalpa", departamento: "Francisco Morazán", type: "colonia" },
-                    "colonia_satelite": { name: "Colonia Satélite", lat: 15.5200, lon: -88.0400, municipio: "San Pedro Sula", departamento: "Cortés", type: "colonia" },
-                    "colonia_palmira": { name: "Colonia Palmira", lat: 14.1000, lon: -87.2000, municipio: "Tegucigalpa", departamento: "Francisco Morazán", type: "colonia" },
-                    "san_pedro_sula": { name: "San Pedro Sula", lat: 15.5000, lon: -88.0300, municipio: "San Pedro Sula", departamento: "Cortés", type: "municipio" },
-                    "tegucigalpa": { name: "Tegucigalpa", lat: 14.0818, lon: -87.2068, municipio: "Tegucigalpa", departamento: "Francisco Morazán", type: "municipio" }
+                    "colonia_kennedy": { 
+                        name: "Colonia Kennedy", 
+                        lat: 14.0833, 
+                        lon: -87.1833, 
+                        municipio: "Tegucigalpa", 
+                        departamento: "Francisco Morazán", 
+                        type: "colonia" 
+                    },
+                    "colonia_satelite": { 
+                        name: "Colonia Satélite", 
+                        lat: 15.5200, 
+                        lon: -88.0400, 
+                        municipio: "San Pedro Sula", 
+                        departamento: "Cortés", 
+                        type: "colonia" 
+                    },
+                    "colonia_palmira": { 
+                        name: "Colonia Palmira", 
+                        lat: 14.1000, 
+                        lon: -87.2000, 
+                        municipio: "Tegucigalpa", 
+                        departamento: "Francisco Morazán", 
+                        type: "colonia" 
+                    },
+                    "san_pedro_sula": { 
+                        name: "San Pedro Sula", 
+                        lat: 15.5000, 
+                        lon: -88.0300, 
+                        municipio: "San Pedro Sula", 
+                        departamento: "Cortés", 
+                        type: "municipio" 
+                    },
+                    "tegucigalpa": { 
+                        name: "Tegucigalpa", 
+                        lat: 14.0818, 
+                        lon: -87.2068, 
+                        municipio: "Tegucigalpa", 
+                        departamento: "Francisco Morazán", 
+                        type: "municipio" 
+                    }
                 };
+                
+                console.log('✅ Usando base de datos local de respaldo');
             }
         } catch (error) {
-            console.error('Error cargando base de datos:', error);
+            console.error('❌ Error cargando base de datos:', error);
         }
     }
 
@@ -1146,258 +1188,275 @@
     }
 
     // ========== SISTEMA PARA AGREGAR DIRECCIONES ==========
-const modal = document.getElementById('addLocationModal');
-const openBtn = document.getElementById('openModalBtn');
-const closeBtn = document.getElementById('closeModalBtn');
-const cancelBtn = document.getElementById('cancelBtn');
-const form = document.getElementById('locationForm');
-const successMessage = document.getElementById('successMessage');
-const detectBtn = document.getElementById('detectBtn');
-const detectedInfo = document.getElementById('detectedInfo');
+    const modal = document.getElementById('addLocationModal');
+    const openBtn = document.getElementById('openModalBtn');
+    const closeBtn = document.getElementById('closeModalBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const form = document.getElementById('locationForm');
+    const successMessage = document.getElementById('successMessage');
+    const detectBtn = document.getElementById('detectBtn');
+    const detectedInfo = document.getElementById('detectedInfo');
 
-// Datos detectados
-let detectedData = {
-    municipio: '',
-    departamento: '',
-    fullAddress: '',
-    placeName: ''
-};
+    // Datos detectados
+    let detectedData = {
+        municipio: '',
+        departamento: '',
+        fullAddress: '',
+        placeName: ''
+    };
 
-openBtn.addEventListener('click', () => {
-    modal.style.display = 'flex';
-    form.reset();
-    successMessage.style.display = 'none';
-    detectedInfo.style.display = 'none';
-    detectedData = { municipio: '', departamento: '', fullAddress: '', placeName: '' };
-});
+    openBtn.addEventListener('click', () => {
+        modal.style.display = 'flex';
+        form.reset();
+        successMessage.style.display = 'none';
+        detectedInfo.style.display = 'none';
+        detectedData = { municipio: '', departamento: '', fullAddress: '', placeName: '' };
+    });
 
-closeBtn.addEventListener('click', () => {
-    modal.style.display = 'none';
-});
-
-cancelBtn.addEventListener('click', () => {
-    modal.style.display = 'none';
-});
-
-modal.addEventListener('click', (e) => {
-    if (e.target === modal) {
+    closeBtn.addEventListener('click', () => {
         modal.style.display = 'none';
-    }
-});
+    });
 
-// ========== DETECCIÓN AUTOMÁTICA DE DIRECCIÓN ==========
-detectBtn.addEventListener('click', async () => {
-    const coordsInput = document.getElementById('locationCoords').value.trim();
-    
-    if (!coordsInput) {
-        alert('⚠️ Por favor ingresa las coordenadas primero');
-        return;
-    }
-    
-    // Validar formato de coordenadas
-    const coords = coordsInput.split(',').map(c => c.trim());
-    if (coords.length !== 2 || isNaN(coords[0]) || isNaN(coords[1])) {
-        alert('❌ Formato de coordenadas inválido. Usa: latitud, longitud');
-        return;
-    }
-    
-    const lat = parseFloat(coords[0]);
-    const lon = parseFloat(coords[1]);
-    
-    // Validar que estén en Honduras (aproximadamente)
-    if (lat < 12.0 || lat > 17.0 || lon > -83.0 || lon < -89.5) {
-        if (!confirm('⚠️ Las coordenadas parecen fuera de Honduras. ¿Continuar?')) {
+    cancelBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+
+    // ========== DETECCIÓN AUTOMÁTICA DE DIRECCIÓN ==========
+    detectBtn.addEventListener('click', async () => {
+        const coordsInput = document.getElementById('locationCoords').value.trim();
+        
+        if (!coordsInput) {
+            alert('⚠️ Por favor ingresa las coordenadas primero');
             return;
         }
-    }
-    
-    // Mostrar carga
-    detectedInfo.innerHTML = `
-        <div class="loading-detection">
-            <div class="loader-small"></div>
-            Detectando dirección en Google Maps...
-        </div>
-    `;
-    detectedInfo.style.display = 'block';
-    
-    try {
-        // Usar Nominatim (OpenStreetMap) para reverso geocoding
-        const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?` +
-            `lat=${lat}&lon=${lon}&` +
-            `format=json&addressdetails=1&zoom=18&accept-language=es`
-        );
         
-        if (!response.ok) throw new Error('Error en la API');
-        
-        const data = await response.json();
-        
-        if (data.error) {
-            throw new Error(data.error);
+        // Validar formato de coordenadas
+        const coords = coordsInput.split(',').map(c => c.trim());
+        if (coords.length !== 2 || isNaN(coords[0]) || isNaN(coords[1])) {
+            alert('❌ Formato de coordenadas inválido. Usa: latitud, longitud');
+            return;
         }
         
-        const address = data.address || {};
+        const lat = parseFloat(coords[0]);
+        const lon = parseFloat(coords[1]);
         
-        // Extraer municipio y departamento de Honduras
-        let municipio = '';
-        let departamento = '';
-        let placeName = data.display_name.split(',')[0];
-        
-        // Mapeo de campos de OpenStreetMap para Honduras
-        if (address.city) {
-            municipio = address.city;
-        } else if (address.town) {
-            municipio = address.town;
-        } else if (address.village) {
-            municipio = address.village;
-        } else if (address.municipality) {
-            municipio = address.municipality;
-        }
-        
-        if (address.state) {
-            departamento = address.state;
-        } else if (address.county) {
-            departamento = address.county;
-        }
-        
-        // Si no se detectó municipio, usar un genérico
-        if (!municipio && !departamento) {
-            // Intentar con API de Google Maps (fallback)
-            const googleResponse = await fetch(
-                `https://maps.googleapis.com/maps/api/geocode/json?` +
-                `latlng=${lat},${lon}&key=AIzaSyDummyKey&language=es`
-            ).catch(() => null);
-            
-            if (googleResponse && googleResponse.ok) {
-                const googleData = await googleResponse.json();
-                if (googleData.results && googleData.results[0]) {
-                    const components = googleData.results[0].address_components;
-                    
-                    components.forEach(component => {
-                        if (component.types.includes('administrative_area_level_2')) {
-                            municipio = component.long_name;
-                        }
-                        if (component.types.includes('administrative_area_level_1')) {
-                            departamento = component.long_name;
-                        }
-                    });
-                }
+        // Validar que estén en Honduras (aproximadamente)
+        if (lat < 12.0 || lat > 17.0 || lon > -83.0 || lon < -89.5) {
+            if (!confirm('⚠️ Las coordenadas parecen fuera de Honduras. ¿Continuar?')) {
+                return;
             }
         }
         
-        // Guardar datos detectados
-        detectedData = {
-            municipio: municipio || 'Desconocido',
-            departamento: departamento || 'Desconocido',
-            fullAddress: data.display_name,
-            placeName: placeName
-        };
-        
-        // Actualizar interfaz
+        // Mostrar carga
         detectedInfo.innerHTML = `
-            <div class="warning-note" style="background: rgba(52, 103, 92, 0.1); border-color: var(--pine);">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 18px;">✅</span>
-                    <div>
-                        <strong>Dirección detectada:</strong><br>
-                        <span id="detectedAddress">
-                            ${municipio ? `<strong>Municipio:</strong> ${municipio}<br>` : ''}
-                            ${departamento ? `<strong>Departamento:</strong> ${departamento}<br>` : ''}
-                            ${placeName ? `<strong>Lugar:</strong> ${placeName}` : ''}
-                        </span>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        // Si no hay nombre ingresado, sugerir el detectado
-        const nameInput = document.getElementById('locationName');
-        if (!nameInput.value.trim() && placeName) {
-            nameInput.value = placeName;
-        }
-        
-        // Auto-seleccionar tipo según lo detectado
-        const typeSelect = document.getElementById('locationType');
-        const lowerAddress = data.display_name.toLowerCase();
-        
-        if (lowerAddress.includes('colonia')) {
-            typeSelect.value = 'colonia';
-        } else if (lowerAddress.includes('barrio')) {
-            typeSelect.value = 'barrio';
-        } else if (lowerAddress.includes('aldea') || lowerAddress.includes('caserío')) {
-            typeSelect.value = 'aldea';
-        } else if (lowerAddress.includes('municipio')) {
-            typeSelect.value = 'municipio';
-        }
-        
-    } catch (error) {
-        console.error('Error en detección:', error);
-        detectedInfo.innerHTML = `
-            <div class="warning-note">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 18px;">⚠️</span>
-                    <div>
-                        <strong>No se pudo detectar la dirección automáticamente</strong><br>
-                        <span style="font-size: 12px;">Puedes enviarla igual y la aprobaremos manualmente</span>
-                    </div>
-                </div>
+            <div class="loading-detection">
+                <div class="loader-small"></div>
+                Detectando dirección en Google Maps...
             </div>
         `;
         detectedInfo.style.display = 'block';
         
-        // Datos por defecto
-        detectedData = {
-            municipio: 'Por determinar',
-            departamento: 'Por determinar',
-            fullAddress: 'Dirección no detectada automáticamente',
-            placeName: 'Ubicación sin nombre'
-        };
-    }
-});
-
-// ========== ENVIAR A TELEGRAM ==========
-async function sendToTelegram(locationData) {
-    try {
-        // Usar los datos detectados si están disponibles
-        const finalData = {
-            name: locationData.name || detectedData.placeName || 'Ubicación sin nombre',
-            coords: locationData.coords,
-            municipio: detectedData.municipio || 'Por determinar',
-            departamento: detectedData.departamento || 'Por determinar',
-            type: locationData.type,
-            detected: detectedData.fullAddress || 'No detectado'
-        };
-        
-        // Método 1: Intentar enviar a través de Render
-        if (RENDER_APP_URL) {
-            try {
-                const response = await fetch(`${RENDER_APP_URL}/send-notification`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        location: finalData,
-                        telegram_chat_id: TELEGRAM_CHAT_ID
-                    })
-                });
-                
-                if (response.ok) {
-                    return {success: true, data: finalData};
-                }
-            } catch (error) {
-                console.log('Fallando a método directo:', error);
+        try {
+            // Usar Nominatim (OpenStreetMap) para reverso geocoding
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?` +
+                `lat=${lat}&lon=${lon}&` +
+                `format=json&addressdetails=1&zoom=18&accept-language=es`
+            );
+            
+            if (!response.ok) throw new Error('Error en la API');
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                throw new Error(data.error);
             }
+            
+            const address = data.address || {};
+            
+            // Extraer municipio y departamento de Honduras
+            let municipio = '';
+            let departamento = '';
+            let placeName = data.display_name.split(',')[0];
+            
+            // Mapeo de campos de OpenStreetMap para Honduras
+            if (address.city) {
+                municipio = address.city;
+            } else if (address.town) {
+                municipio = address.town;
+            } else if (address.village) {
+                municipio = address.village;
+            } else if (address.municipality) {
+                municipio = address.municipality;
+            }
+            
+            if (address.state) {
+                departamento = address.state;
+            } else if (address.county) {
+                departamento = address.county;
+            }
+            
+            // Si no se detectó municipio, usar un genérico
+            if (!municipio && !departamento) {
+                // Intentar con API de Google Maps (fallback)
+                const googleResponse = await fetch(
+                    `https://maps.googleapis.com/maps/api/geocode/json?` +
+                    `latlng=${lat},${lon}&key=AIzaSyDummyKey&language=es`
+                ).catch(() => null);
+                
+                if (googleResponse && googleResponse.ok) {
+                    const googleData = await googleResponse.json();
+                    if (googleData.results && googleData.results[0]) {
+                        const components = googleData.results[0].address_components;
+                        
+                        components.forEach(component => {
+                            if (component.types.includes('administrative_area_level_2')) {
+                                municipio = component.long_name;
+                            }
+                            if (component.types.includes('administrative_area_level_1')) {
+                                departamento = component.long_name;
+                            }
+                        });
+                    }
+                }
+            }
+            
+            // Guardar datos detectados
+            detectedData = {
+                municipio: municipio || 'Por determinar',
+                departamento: departamento || 'Por determinar',
+                fullAddress: data.display_name,
+                placeName: placeName
+            };
+            
+            // Actualizar interfaz
+            detectedInfo.innerHTML = `
+                <div class="warning-note" style="background: rgba(52, 103, 92, 0.1); border-color: var(--pine);">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 18px;">✅</span>
+                        <div>
+                            <strong>Dirección detectada:</strong><br>
+                            <span id="detectedAddress">
+                                ${municipio ? `<strong>Municipio:</strong> ${municipio}<br>` : ''}
+                                ${departamento ? `<strong>Departamento:</strong> ${departamento}<br>` : ''}
+                                ${placeName ? `<strong>Lugar:</strong> ${placeName}` : ''}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Si no hay nombre ingresado, sugerir el detectado
+            const nameInput = document.getElementById('locationName');
+            if (!nameInput.value.trim() && placeName) {
+                nameInput.value = placeName;
+            }
+            
+            // Auto-seleccionar tipo según lo detectado
+            const typeSelect = document.getElementById('locationType');
+            const lowerAddress = data.display_name.toLowerCase();
+            
+            if (lowerAddress.includes('colonia')) {
+                typeSelect.value = 'colonia';
+            } else if (lowerAddress.includes('barrio')) {
+                typeSelect.value = 'barrio';
+            } else if (lowerAddress.includes('aldea') || lowerAddress.includes('caserío')) {
+                typeSelect.value = 'aldea';
+            } else if (lowerAddress.includes('municipio')) {
+                typeSelect.value = 'municipio';
+            }
+            
+        } catch (error) {
+            console.error('Error en detección:', error);
+            detectedInfo.innerHTML = `
+                <div class="warning-note">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 18px;">⚠️</span>
+                        <div>
+                            <strong>No se pudo detectar la dirección automáticamente</strong><br>
+                            <span style="font-size: 12px;">Puedes enviarla igual y la aprobaremos manualmente</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            detectedInfo.style.display = 'block';
+            
+            // Datos por defecto
+            detectedData = {
+                municipio: 'Por determinar',
+                departamento: 'Por determinar',
+                fullAddress: 'Dirección no detectada automáticamente',
+                placeName: 'Ubicación sin nombre'
+            };
         }
-        
-        // Método 2: Envío directo a Telegram API
-        const message = `📍 *NUEVA SOLICITUD DE DIRECCIÓN - DETECTADA AUTOMÁTICAMENTE*
+    });
+
+    // ========== ENVIAR A TELEGRAM ==========
+    async function sendToTelegram(locationData) {
+        try {
+            // Usar los datos detectados si están disponibles
+            const finalData = {
+                name: locationData.name || detectedData.placeName || 'Ubicación sin nombre',
+                coords: locationData.coords,
+                municipio: detectedData.municipio || 'Por determinar',
+                departamento: detectedData.departamento || 'Por determinar',
+                type: locationData.type,
+                detected: detectedData.fullAddress || 'No detectado'
+            };
+            
+            console.log('📤 Enviando datos:', finalData);
+            console.log('🌐 URL de backend:', RENDER_APP_URL);
+            
+            // Intentar enviar a través del backend en Render
+            if (RENDER_APP_URL && RENDER_APP_URL !== 'null') {
+                try {
+                    console.log(`📡 Enviando a: ${RENDER_APP_URL}/send-notification`);
+                    
+                    const response = await fetch(`${RENDER_APP_URL}/send-notification`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            location: finalData,
+                            telegram_chat_id: TELEGRAM_CHAT_ID
+                        })
+                    });
+                    
+                    console.log('📨 Respuesta del backend:', response.status);
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        console.log('✅ Envío exitoso:', result);
+                        return {success: true, data: finalData};
+                    } else {
+                        console.warn('⚠️ Backend respondió con error:', response.status);
+                        // Continuar con método directo
+                    }
+                } catch (error) {
+                    console.warn('⚠️ Error con backend, usando método directo:', error.message);
+                }
+            }
+            
+            // Método directo a Telegram API (fallback)
+            console.log('📤 Usando método directo a Telegram API');
+            
+            const message = `📍 *NUEVA SOLICITUD DE DIRECCIÓN*
 
 *Coordenadas:* \`${finalData.coords}\`
 *Nombre:* ${finalData.name}
-*Municipio detectado:* ${finalData.municipio}
-*Departamento detectado:* ${finalData.departamento}
+*Municipio:* ${finalData.municipio}
+*Departamento:* ${finalData.departamento}
 *Tipo:* ${finalData.type}
 
-*Dirección completa:*
+*Dirección detectada:*
 ${finalData.detected}
 
 *Para aprobar, responde:*
@@ -1405,97 +1464,103 @@ ${finalData.detected}
 *Para rechazar:*
 ❌ rechazar`;
 
-        const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-        
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                chat_id: TELEGRAM_CHAT_ID,
-                text: message,
-                parse_mode: 'Markdown'
-            })
-        });
-
-        return {success: response.ok, data: finalData};
-        
-    } catch (error) {
-        console.error('Error enviando a Telegram:', error);
-        return {success: false, data: null};
-    }
-}
-
-// ========== MANEJAR ENVÍO DEL FORMULARIO ==========
-form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const submitBtn = document.getElementById('submitBtn');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '⏳ Detectando y enviando...';
-    submitBtn.disabled = true;
-    
-    try {
-        const locationData = {
-            name: document.getElementById('locationName').value.trim(),
-            coords: document.getElementById('locationCoords').value.trim(),
-            type: document.getElementById('locationType').value
-        };
-        
-        // Validar coordenadas
-        const coords = locationData.coords.split(',').map(c => c.trim());
-        if (coords.length !== 2 || isNaN(coords[0]) || isNaN(coords[1])) {
-            throw new Error('Formato de coordenadas inválido. Usa: lat, lon');
-        }
-        
-        // Si no se detectó automáticamente, intentar detectar ahora
-        if (!detectedData.municipio || detectedData.municipio === 'Por determinar') {
-            await detectBtn.click();
-            // Esperar un poco para la detección
-            await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-        
-        // Enviar a Telegram
-        const result = await sendToTelegram(locationData);
-        
-        if (result.success) {
-            successMessage.innerHTML = `
-                ✅ <strong>Solicitud enviada para aprobación</strong><br>
-                <small style="font-size: 11px;">
-                    Municipio: ${result.data.municipio}<br>
-                    Departamento: ${result.data.departamento}
-                </small>
-            `;
-            successMessage.style.display = 'block';
-            submitBtn.innerHTML = '✅ ¡Enviado!';
+            const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
             
-            setTimeout(() => {
-                modal.style.display = 'none';
-                form.reset();
-                detectedInfo.style.display = 'none';
-                detectedData = { municipio: '', departamento: '', fullAddress: '', placeName: '' };
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            }, 3000);
+            console.log('📡 Enviando a Telegram API directa');
             
-        } else {
-            throw new Error('No se pudo enviar la solicitud');
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    chat_id: TELEGRAM_CHAT_ID,
+                    text: message,
+                    parse_mode: 'Markdown'
+                })
+            });
+
+            const result = response.ok;
+            console.log('📨 Resultado Telegram API:', result);
+            
+            return {success: result, data: finalData};
+            
+        } catch (error) {
+            console.error('❌ Error enviando a Telegram:', error);
+            return {success: false, data: null};
         }
-        
-    } catch (error) {
-        alert('Error: ' + error.message);
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
     }
-});
+
+    // ========== MANEJAR ENVÍO DEL FORMULARIO ==========
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const submitBtn = document.getElementById('submitBtn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '⏳ Enviando...';
+        submitBtn.disabled = true;
+        
+        try {
+            const locationData = {
+                name: document.getElementById('locationName').value.trim(),
+                coords: document.getElementById('locationCoords').value.trim(),
+                type: document.getElementById('locationType').value
+            };
+            
+            // Validar coordenadas
+            const coords = locationData.coords.split(',').map(c => c.trim());
+            if (coords.length !== 2 || isNaN(coords[0]) || isNaN(coords[1])) {
+                throw new Error('Formato de coordenadas inválido. Usa: lat, lon');
+            }
+            
+            // Si no se detectó automáticamente, intentar detectar ahora
+            if (!detectedData.municipio || detectedData.municipio === 'Por determinar') {
+                await detectBtn.click();
+                // Esperar un poco para la detección
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+            
+            // Enviar a Telegram
+            const result = await sendToTelegram(locationData);
+            
+            if (result.success) {
+                successMessage.innerHTML = `
+                    ✅ <strong>Solicitud enviada para aprobación</strong><br>
+                    <small style="font-size: 11px;">
+                        ID de solicitud: ${Date.now().toString(36).toUpperCase()}<br>
+                        Se envió a tu bot de Telegram para revisión
+                    </small>
+                `;
+                successMessage.style.display = 'block';
+                submitBtn.innerHTML = '✅ ¡Enviado!';
+                
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    form.reset();
+                    detectedInfo.style.display = 'none';
+                    detectedData = { municipio: '', departamento: '', fullAddress: '', placeName: '' };
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }, 3000);
+                
+            } else {
+                throw new Error('No se pudo enviar la solicitud. Verifica la conexión.');
+            }
+            
+        } catch (error) {
+            alert('❌ Error: ' + error.message);
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    });
 
     // ========== FUNCIÓN PARA ACTUALIZAR BASE DE DATOS ==========
     async function refreshDatabase() {
+        console.log('🔄 Actualizando base de datos desde GitHub...');
         await loadDatabaseFromGitHub();
         const currentQuery = document.getElementById('mainSearch').value.trim();
         if (currentQuery.length >= 2) {
             performSearch(currentQuery);
         }
-        alert('✅ Base de datos actualizada');
+        alert('✅ Base de datos actualizada desde GitHub');
     }
 
     // ========== INICIALIZAR APLICACIÓN ==========
@@ -1503,6 +1568,16 @@ form.addEventListener('submit', async (e) => {
     
     // Hacer refreshDatabase accesible globalmente
     window.refreshDatabase = refreshDatabase;
+    
+    // Agregar botón de debug en consola
+    console.log('🚀 Aplicación inicializada correctamente');
+    console.log('📊 Configuración:');
+    console.log('- Telegram Chat ID:', TELEGRAM_CHAT_ID);
+    console.log('- Backend URL:', RENDER_APP_URL);
+    console.log('- GitHub Repo:', GITHUB_USER + '/' + GITHUB_REPO);
+    console.log('📌 Comandos disponibles:');
+    console.log('- refreshDatabase() - Actualizar base de datos');
+    console.log('- detectedData - Ver datos detectados');
 </script>
 </body>
 </html>
