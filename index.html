@@ -802,22 +802,44 @@
     }
 
     function searchLocalFast(query) {
-        const normalized = normalizeQuery(query);
-        const results = [];
-        
+    const normalized = normalizeQuery(query);
+    const results = [];
+    
+    // NUEVA FUNCIONALIDAD: Si la búsqueda es "user_submission", mostrar todas las agregadas por usuarios
+    if (normalized === "user_submission") {
         Object.entries(localDatabase).forEach(([key, location]) => {
-            if (key.includes(normalized) || normalized.includes(key) || 
-                location.name.toLowerCase().includes(normalized)) {
+            // Verificar si es una ubicación agregada por usuario
+            if (location.source === "user_submission" || location.approved === true) {
                 results.push({
                     ...location,
                     source: 'official',
-                    score: key === normalized ? 100 : 50
+                    score: 100
                 });
             }
         });
         
-        return results.sort((a, b) => b.score - a.score);
+        // Ordenar por fecha de adición (más recientes primero)
+        return results.sort((a, b) => {
+            const dateA = a.added ? new Date(a.added) : new Date(0);
+            const dateB = b.added ? new Date(b.added) : new Date(0);
+            return dateB - dateA;
+        });
     }
+    
+    // Búsqueda normal
+    Object.entries(localDatabase).forEach(([key, location]) => {
+        if (key.includes(normalized) || normalized.includes(key) || 
+            location.name.toLowerCase().includes(normalized)) {
+            results.push({
+                ...location,
+                source: 'official',
+                score: key === normalized ? 100 : 50
+            });
+        }
+    });
+    
+    return results.sort((a, b) => b.score - a.score);
+}
 
     async function searchAPI(query) {
         const cacheKey = `api_${normalizeQuery(query)}`;
@@ -1132,28 +1154,30 @@
     }
 
     function setupQuickFilters() {
-        const filters = [
-            {text: "Colonias Populares", search: "Colonia"},
-            {text: "Barrios", search: "Barrio"},
-            {text: "Municipios", search: "Municipio Honduras"},
-            {text: "Aldeas", search: "Aldea Honduras"},
-            {text: "Tegucigalpa", search: "Tegucigalpa"},
-            {text: "San Pedro Sula", search: "San Pedro Sula"},
-            {text: "La Ceiba", search: "La Ceiba"}
-        ];
-        
-        const container = document.getElementById('quickFilters');
-        filters.forEach(filter => {
-            const btn = document.createElement('button');
-            btn.className = 'quick-filter';
-            btn.textContent = filter.text;
-            btn.onclick = () => {
-                document.getElementById('mainSearch').value = filter.search;
-                document.getElementById('mainSearch').dispatchEvent(new Event('input'));
-            };
-            container.appendChild(btn);
-        });
-    }
+    const filters = [
+        {text: "Colonias Populares", search: "Colonia"},
+        {text: "Barrios", search: "Barrio"},
+        {text: "Municipios", search: "Municipio Honduras"},
+        {text: "Aldeas", search: "Aldea Honduras"},
+        {text: "Tegucigalpa", search: "Tegucigalpa"},
+        {text: "San Pedro Sula", search: "San Pedro Sula"},
+        {text: "La Ceiba", search: "La Ceiba"},
+        // NUEVO: Agregar este filtro
+        {text: "📝 Agregadas por Usuarios", search: "user_submission"}
+    ];
+    
+    const container = document.getElementById('quickFilters');
+    filters.forEach(filter => {
+        const btn = document.createElement('button');
+        btn.className = 'quick-filter';
+        btn.textContent = filter.text;
+        btn.onclick = () => {
+            document.getElementById('mainSearch').value = filter.search;
+            document.getElementById('mainSearch').dispatchEvent(new Event('input'));
+        };
+        container.appendChild(btn);
+    });
+}
 
     // ========== SISTEMA PARA AGREGAR DIRECCIONES ==========
     const modal = document.getElementById('addLocationModal');
