@@ -34,5 +34,18 @@
     "source": "user_submission",
     "detected_automatically": true,
     "full_address": "San José del Boquerón, San Pedro Sula, Cortés, Honduras"
+  },
+  "calle_principal_el_porvenir_el_filon": {
+    "name": "Calle Principal El Porvenir El Filon",
+    "lat": 15.479624810996512,
+    "lon": -87.55898314167956,
+    "municipio": "Morazán",
+    "departamento": "Yoro",
+    "type": "colonia",
+    "added": "2026-02-07T22:51:23.580253",
+    "approved": true,
+    "source": "user_submission",
+    "detected_automatically": true,
+    "full_address": "Calle Principal El Porvenir El Filon, Morazán, Yoro, Honduras"
   }
 }
