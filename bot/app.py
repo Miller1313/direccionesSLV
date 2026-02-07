@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import os
 import json
 import base64
@@ -9,6 +10,7 @@ import re    # <-- También agregué re para expresiones regulares
 import time  # <-- Y time para timestamps
 
 app = Flask(__name__)
+CORS(app)
 
 # Configuración
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
@@ -97,9 +99,15 @@ def send_notification():
     """Endpoint para que tu HTML envíe solicitudes - VERSIÓN FUNCIONAL"""
     print("🔔 Recibiendo solicitud del HTML...")
     
+    # Añadir logging de headers para ver CORS
+    print(f"📨 Headers recibidos: {request.headers}")
+    print(f"📨 Origen: {request.headers.get('Origin')}")
+    
     try:
         data = request.json
         print(f"📦 Datos recibidos: {data}")
+        
+        # Resto del código...
         
         location = data.get('location')
         chat_id = data.get('telegram_chat_id')
