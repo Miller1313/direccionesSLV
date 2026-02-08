@@ -60,5 +60,18 @@
     "source": "user_submission",
     "detected_automatically": true,
     "full_address": "Pinturas Sur, 8a Calle NO, San Pedro Sula, Cortés, 21102, Honduras"
+  },
+  "barrio_concepcion": {
+    "name": "Barrio Concepcion",
+    "lat": 15.501913181237823,
+    "lon": -88.02058079877395,
+    "municipio": "San Pedro Sula",
+    "departamento": "Cortés",
+    "type": "barrio",
+    "added": "2026-02-08T00:12:43.002145",
+    "approved": true,
+    "source": "user_submission",
+    "detected_automatically": true,
+    "full_address": "5a Calle SE, San Pedro Sula, Cortés, 21104, Honduras"
   }
 }
