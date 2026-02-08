@@ -1,20 +1,5 @@
 {
-  "HN": {
-    "barrio_barandillas": {
-      "name": "Barrio Barandillas",
-      "lat": 15.51362419083748,
-      "lon": -88.01457590891,
-      "pais": "HN",
-      "type": "barrio",
-      "added": "2026-02-08T02:12:38.982919",
-      "approved": true,
-      "source": "user_submission",
-      "detected_automatically": true,
-      "full_address": "Coordenadas: 15.51362419083748, -88.01457590891",
-      "municipio": "Por determinar",
-      "departamento": "Por determinar"
-    }
-  },
+  "HN": {},
   "SV": {},
   "CR": {},
   "PA": {}

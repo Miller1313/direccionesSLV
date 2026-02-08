@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Buscador Centroamérica - Instantáneo</title>
     <style>
         :root {
@@ -15,10 +15,6 @@
             --warning: #FFB74D;
             --success: #4CAF50;
             --telegram-blue: #0088cc;
-            --hn-blue: #0E4BEF;
-            --sv-blue: #0E4BEF;
-            --cr-blue: #002B7F;
-            --pa-blue: #005293;
         }
 
         body { 
@@ -26,26 +22,28 @@
             background-color: var(--bg-dark);
             color: white;
             margin: 0; 
-            padding: 15px;
+            padding: 10px;
             display: flex; 
             justify-content: center;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         .container { 
             width: 100%; 
-            max-width: 800px; 
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .header { 
             text-align: center; 
-            margin-bottom: 20px; 
-            padding-bottom: 15px;
+            margin-bottom: 15px; 
+            padding-bottom: 10px;
             border-bottom: 2px solid var(--pine);
         }
         
         .header h1 { 
-            font-size: 24px; 
+            font-size: 20px; 
             margin: 0; 
             color: var(--blue-sky); 
             font-weight: 800; 
@@ -53,19 +51,19 @@
         }
         
         .header p { 
-            font-size: 14px; 
+            font-size: 13px; 
             color: var(--soft-mint); 
             font-weight: 600; 
             margin-top: 5px; 
             opacity: 0.9; 
         }
 
-        /* BANDERAS DE PAÍSES */
+        /* BANDERAS DE PAÍSES - COMPACTAS */
         .countries-flags {
             display: flex;
             justify-content: center;
-            gap: 10px;
-            margin: 20px 0;
+            gap: 8px;
+            margin: 15px 0;
             flex-wrap: wrap;
         }
 
@@ -73,51 +71,42 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 10px 15px;
-            border-radius: 10px;
+            padding: 8px 10px;
+            border-radius: 8px;
             background: var(--card-bg);
             border: 2px solid transparent;
             cursor: pointer;
             transition: all 0.3s;
-            min-width: 100px;
+            min-width: 70px;
+            max-width: 90px;
+            flex: 1;
         }
 
         .country-flag.active {
             border-color: var(--soft-mint);
             background: rgba(152, 255, 217, 0.1);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .flag-emoji {
+            font-size: 24px;
+            margin-bottom: 3px;
+        }
+
+        .country-name {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--granite);
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
         }
 
         .country-flag.active .country-name {
             color: var(--soft-mint);
-            font-weight: 700;
         }
-
-        .flag-emoji {
-            font-size: 32px;
-            margin-bottom: 5px;
-        }
-
-        .country-name {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--granite);
-            text-align: center;
-        }
-
-        .country-stats {
-            font-size: 10px;
-            color: var(--soft-mint);
-            margin-top: 3px;
-            opacity: 0.8;
-        }
-
-        /* COLORES POR PAÍS */
-        .country-flag[data-country="HN"] .flag-emoji { color: #0E4BEF; }
-        .country-flag[data-country="SV"] .flag-emoji { color: #0E4BEF; }
-        .country-flag[data-country="CR"] .flag-emoji { color: #002B7F; }
-        .country-flag[data-country="PA"] .flag-emoji { color: #005293; }
 
         /* BÚSQUEDA */
         .search-section {
@@ -127,12 +116,12 @@
 
         .search-input {
             width: 100%;
-            padding: 16px 20px;
-            border-radius: 12px;
+            padding: 14px 16px;
+            border-radius: 10px;
             border: 2px solid var(--pine);
             background: var(--card-bg);
             color: white;
-            font-size: 16px;
+            font-size: 15px;
             box-sizing: border-box;
             outline: none;
             transition: all 0.3s ease;
@@ -140,68 +129,121 @@
         
         .search-input:focus {
             border-color: var(--soft-mint);
-            box-shadow: 0 0 15px rgba(152, 255, 217, 0.3);
-        }
-
-        .search-input::placeholder {
-            color: var(--granite);
-            opacity: 0.7;
+            box-shadow: 0 0 12px rgba(152, 255, 217, 0.2);
         }
 
         .search-info {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 10px;
-            font-size: 12px;
+            margin-top: 8px;
+            font-size: 11px;
         }
 
         .current-country {
             background: var(--pine);
             color: white;
-            padding: 5px 12px;
-            border-radius: 20px;
+            padding: 4px 10px;
+            border-radius: 15px;
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .cache-status {
             color: var(--soft-mint);
             background: rgba(255, 255, 255, 0.05);
-            padding: 5px 12px;
-            border-radius: 20px;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 10px;
+        }
+
+        /* BOTÓN MAPS - RESTAURADO */
+        .map-search-section {
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .map-search-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--pine);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .map-search-btn:hover {
+            background: #2a564d;
+            transform: translateY(-2px);
+        }
+
+        /* FILTROS RÁPIDOS */
+        .quick-filters {
+            display: flex;
+            gap: 8px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .quick-filter {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--pine);
+            color: var(--soft-mint);
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .quick-filter:hover {
+            background: var(--pine);
+            color: white;
         }
 
         /* RESULTADOS */
         .results-list { 
-            margin-top: 20px; 
-            max-height: 500px;
+            margin-top: 15px; 
+            max-height: 400px;
             overflow-y: auto;
             padding-right: 5px;
         }
 
         .results-list::-webkit-scrollbar {
-            width: 8px;
+            width: 6px;
         }
 
         .results-list::-webkit-scrollbar-track {
             background: var(--card-bg);
-            border-radius: 4px;
+            border-radius: 3px;
         }
 
         .results-list::-webkit-scrollbar-thumb {
             background: var(--pine);
-            border-radius: 4px;
+            border-radius: 3px;
         }
 
         .location-card {
             background: var(--card-bg);
-            border-radius: 12px;
-            padding: 18px;
-            margin-bottom: 12px;
-            border-left: 5px solid var(--pine);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--pine);
             transition: all 0.3s;
             cursor: pointer;
             position: relative;
@@ -214,24 +256,23 @@
         }
         
         .location-card:hover { 
-            transform: translateX(5px); 
+            transform: translateX(3px); 
             border-left-color: var(--soft-mint);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
         }
 
         .location-card-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .location-type {
             background: var(--pine);
             color: white;
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 10px;
             font-weight: bold;
             text-transform: uppercase;
         }
@@ -239,40 +280,40 @@
         .location-country {
             background: rgba(255, 255, 255, 0.1);
             color: var(--soft-mint);
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 9px;
             font-weight: bold;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
         }
 
         .place-name { 
-            font-size: 18px; 
+            font-size: 16px; 
             font-weight: 800; 
             color: var(--blue-sky); 
             display: block; 
-            margin-bottom: 10px; 
+            margin-bottom: 8px; 
         }
 
         .location-hierarchy {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 10px;
-            margin: 12px 0;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 8px;
+            margin: 10px 0;
         }
 
         .hierarchy-item {
             display: flex;
             align-items: center;
-            font-size: 13px;
+            font-size: 12px;
         }
 
         .hierarchy-label {
             color: var(--soft-mint);
             font-weight: 600;
-            min-width: 110px;
+            min-width: 90px;
         }
 
         .hierarchy-value {
@@ -287,36 +328,36 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 15px;
-            padding-top: 12px;
+            margin-top: 12px;
+            padding-top: 10px;
             border-top: 1px solid rgba(255,255,255,0.1);
         }
 
         .coords-display {
             font-family: 'Courier New', monospace;
-            font-size: 13px;
+            font-size: 11px;
             color: var(--granite);
             background: rgba(255,255,255,0.08);
-            padding: 5px 12px;
-            border-radius: 8px;
+            padding: 4px 10px;
+            border-radius: 6px;
         }
 
         .action-buttons {
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
         .btn-action {
-            padding: 8px 15px;
-            border-radius: 10px;
+            padding: 6px 12px;
+            border-radius: 8px;
             border: none;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             white-space: nowrap;
         }
 
@@ -327,7 +368,6 @@
 
         .btn-copy:hover {
             background: white;
-            transform: scale(1.05);
         }
 
         .btn-copy.success {
@@ -347,31 +387,31 @@
         /* ESTADOS */
         .no-results {
             text-align: center;
-            padding: 60px 20px;
+            padding: 40px 15px;
             color: var(--granite);
         }
 
         .no-results-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
+            font-size: 40px;
+            margin-bottom: 15px;
             opacity: 0.5;
         }
 
         .searching {
             text-align: center;
-            padding: 40px 20px;
+            padding: 30px 15px;
             color: var(--soft-mint);
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
         }
 
         .loader {
-            width: 50px;
-            height: 50px;
-            border: 4px solid var(--pine);
-            border-top: 4px solid var(--soft-mint);
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--pine);
+            border-top: 3px solid var(--soft-mint);
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -382,57 +422,30 @@
         }
 
         .results-stats {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--granite);
             text-align: center;
-            margin-top: 20px;
-            padding: 12px;
+            margin-top: 15px;
+            padding: 10px;
             background: rgba(255,255,255,0.05);
-            border-radius: 10px;
+            border-radius: 8px;
             display: none;
-        }
-
-        /* FILTROS RÁPIDOS */
-        .quick-filters {
-            display: flex;
-            gap: 10px;
-            margin: 20px 0;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .quick-filter {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--pine);
-            color: var(--soft-mint);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 600;
-        }
-
-        .quick-filter:hover {
-            background: var(--pine);
-            color: white;
-            transform: translateY(-2px);
         }
 
         /* BOTÓN FLOTANTE */
         .floating-btn {
             position: fixed;
-            bottom: 25px;
-            right: 25px;
+            bottom: 20px;
+            right: 20px;
             background: linear-gradient(135deg, var(--success), var(--blue-sky));
             color: white;
-            width: 65px;
-            height: 65px;
+            width: 55px;
+            height: 55px;
             border-radius: 50%;
             border: none;
-            font-size: 28px;
+            font-size: 24px;
             cursor: pointer;
-            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             transition: all 0.3s;
             z-index: 1000;
             display: flex;
@@ -441,11 +454,10 @@
         }
 
         .floating-btn:hover {
-            transform: scale(1.15) rotate(90deg);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            transform: scale(1.1);
         }
 
-        /* MODAL */
+        /* MODAL - MÁS COMPACTO */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -454,24 +466,27 @@
             bottom: 0;
             background: rgba(0, 0, 0, 0.85);
             display: none;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
             z-index: 1001;
-            animation: fadeIn 0.3s ease;
+            overflow-y: auto;
+            padding: 20px 10px;
         }
 
         .modal-content {
             background: var(--card-bg);
-            padding: 30px;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 550px;
+            padding: 20px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 450px;
             border: 2px solid var(--pine);
             animation: slideUp 0.3s ease;
+            margin-top: 20px;
+            margin-bottom: 20px;
         }
 
         @keyframes slideUp {
-            from { transform: translateY(30px); opacity: 0; }
+            from { transform: translateY(20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
 
@@ -479,14 +494,14 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             border-bottom: 1px solid var(--pine);
-            padding-bottom: 15px;
+            padding-bottom: 12px;
         }
 
         .modal-title {
             color: var(--soft-mint);
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 800;
         }
 
@@ -494,7 +509,7 @@
             background: none;
             border: none;
             color: var(--granite);
-            font-size: 28px;
+            font-size: 24px;
             cursor: pointer;
             transition: color 0.3s;
             line-height: 1;
@@ -504,69 +519,130 @@
             color: var(--soft-mint);
         }
 
-        /* FORMULARIO */
+        /* FORMULARIO SIMPLIFICADO */
         .form-group {
-            margin-bottom: 18px;
+            margin-bottom: 15px;
         }
 
         .form-label {
             display: block;
             color: var(--soft-mint);
-            margin-bottom: 8px;
-            font-size: 15px;
+            margin-bottom: 6px;
+            font-size: 14px;
             font-weight: 700;
         }
 
-        .form-input {
+        .form-input, .form-select {
             width: 100%;
-            padding: 14px;
+            padding: 12px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--pine);
-            border-radius: 10px;
+            border-radius: 8px;
             color: white;
-            font-size: 15px;
+            font-size: 14px;
             box-sizing: border-box;
         }
 
-        .form-input:focus {
+        .form-input:focus, .form-select:focus {
             outline: none;
             border-color: var(--soft-mint);
         }
 
+        .form-help {
+            font-size: 11px;
+            color: var(--granite);
+            margin-top: 5px;
+            display: block;
+        }
+
+        /* ELIMINADO: Campos dinámicos por país */
+
+        .detected-info {
+            margin: 15px 0;
+        }
+
+        .detected-card {
+            background: rgba(52, 103, 92, 0.1);
+            border: 1px solid var(--pine);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .detected-card strong {
+            color: var(--soft-mint);
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .detected-card span {
+            font-size: 12px;
+            color: white;
+            line-height: 1.5;
+        }
+
+        .loading-detection {
+            text-align: center;
+            padding: 15px;
+            color: var(--soft-mint);
+        }
+
+        .loading-detection .loader-small {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--pine);
+            border-top: 2px solid var(--soft-mint);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .success-message {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid var(--success);
+            color: var(--soft-mint);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+            margin-top: 15px;
+            animation: fadeIn 0.5s ease;
+        }
+
         .form-buttons {
             display: flex;
-            gap: 12px;
-            margin-top: 25px;
+            gap: 10px;
+            margin-top: 20px;
         }
 
         .btn-primary {
-            flex: 1;
-            padding: 14px;
+            flex: 2;
+            padding: 12px;
             background: var(--telegram-blue);
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             font-weight: 800;
             cursor: pointer;
             transition: all 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .btn-primary:hover {
             background: #0077b5;
-            transform: translateY(-2px);
         }
 
         .btn-secondary {
             flex: 1;
-            padding: 14px;
+            padding: 12px;
             background: var(--card-bg);
             color: var(--granite);
             border: 1px solid var(--pine);
-            border-radius: 10px;
+            border-radius: 8px;
             font-weight: 800;
             cursor: pointer;
             transition: all 0.3s;
@@ -575,73 +651,85 @@
         .btn-secondary:hover {
             background: var(--pine);
             color: white;
-            transform: translateY(-2px);
         }
 
-        .success-message {
-            background: rgba(76, 175, 80, 0.1);
-            border: 1px solid var(--success);
-            color: var(--soft-mint);
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            display: none;
-            margin-top: 20px;
-            animation: fadeIn 0.5s ease;
+        /* RESPONSIVE PARA PANTALLAS PEQUEÑAS */
+        @media (max-width: 480px) {
+            body { padding: 8px; }
+            
+            .header h1 { font-size: 18px; }
+            .header p { font-size: 12px; }
+            
+            .country-flag {
+                min-width: 60px;
+                padding: 6px 8px;
+            }
+            
+            .flag-emoji { font-size: 20px; }
+            .country-name { font-size: 10px; }
+            
+            .search-input { padding: 12px 14px; font-size: 14px; }
+            
+            .location-card { padding: 12px; }
+            .place-name { font-size: 15px; }
+            
+            .coordinates-row {
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn-action {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .modal-content {
+                padding: 15px;
+                margin-top: 10px;
+            }
+            
+            .modal-title { font-size: 16px; }
+            
+            .form-buttons {
+                flex-direction: column;
+            }
+            
+            .btn-primary, .btn-secondary {
+                width: 100%;
+            }
+            
+            .floating-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 22px;
+                bottom: 15px;
+                right: 15px;
+            }
         }
 
-        /* DETECTADO */
-        .detected-info {
-            margin: 20px 0;
-            animation: fadeIn 0.5s ease;
+        /* PARA PANTALLAS MUY ALTAS */
+        @media (min-height: 800px) {
+            .results-list {
+                max-height: 500px;
+            }
         }
 
-        .detected-card {
-            background: rgba(52, 103, 92, 0.1);
-            border: 1px solid var(--pine);
-            border-radius: 10px;
-            padding: 15px;
-        }
-
-        .detected-card strong {
-            color: var(--soft-mint);
-            display: block;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-
-        .detected-card span {
-            font-size: 13px;
-            color: white;
-            line-height: 1.6;
-        }
-
-        .loading-detection {
-            text-align: center;
-            padding: 20px;
-            color: var(--soft-mint);
-        }
-
-        .loading-detection .loader-small {
-            width: 25px;
-            height: 25px;
-            border: 3px solid var(--pine);
-            border-top: 3px solid var(--soft-mint);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            margin-right: 12px;
-        }
-
-        /* RESPONSIVE */
-        @media (max-width: 768px) {
-            .container { max-width: 100%; }
-            .country-flag { min-width: 80px; padding: 8px 12px; }
-            .flag-emoji { font-size: 28px; }
-            .action-buttons { flex-wrap: wrap; }
-            .btn-action { flex: 1; min-width: 120px; }
-            .coordinates-row { flex-direction: column; gap: 12px; align-items: stretch; }
-            .form-buttons { flex-direction: column; }
+        /* PARA PANTALLAS CORTAS */
+        @media (max-height: 600px) {
+            .results-list {
+                max-height: 250px;
+            }
+            
+            .modal-overlay {
+                align-items: flex-start;
+                padding-top: 10px;
+            }
         }
     </style>
 </head>
@@ -649,32 +737,39 @@
 
 <div class="container">
     <div class="header">
-        <h1>📍 Buscador Centroamérica - Instantáneo</h1>
-        <p>Encuentra direcciones en Honduras, El Salvador, Costa Rica y Panamá</p>
+        <h1>📍 Buscador Centroamérica</h1>
+        <p>Encuentra direcciones en Centroamérica</p>
     </div>
 
     <!-- BANDERAS DE PAÍSES -->
     <div class="countries-flags" id="countriesFlags">
-        <!-- Se llenará dinámicamente con JavaScript -->
+        <!-- Se llenará con JavaScript -->
     </div>
 
     <!-- BÚSQUEDA -->
     <div class="search-section">
         <input type="text" id="mainSearch" class="search-input" 
-               placeholder="Buscar colonia, barrio, municipio, ciudad...">
+               placeholder="Buscar colonia, barrio, municipio...">
         <div class="search-info">
             <div class="current-country" id="currentCountry">
                 <span id="currentFlag">🇭🇳</span>
                 <span id="currentCountryName">Honduras</span>
             </div>
             <div class="cache-status" id="cacheStatus">
-                Cargando datos...
+                Cargando...
             </div>
         </div>
     </div>
 
     <!-- FILTROS RÁPIDOS -->
     <div class="quick-filters" id="quickFilters"></div>
+
+    <!-- BOTÓN MAPS - RESTAURADO -->
+    <div class="map-search-section">
+        <button class="map-search-btn" id="openMapsBtn">
+            <span>🗺️ ¿No está lo que buscabas? Abrir en Maps</span>
+        </button>
+    </div>
 
     <!-- RESULTADOS -->
     <div id="resultsContainer" class="results-list"></div>
@@ -683,10 +778,10 @@
     <div id="resultsStats" class="results-stats"></div>
 </div>
 
-<!-- BOTÓN FLOTANTE PARA AGREGAR -->
+<!-- BOTÓN FLOTANTE -->
 <button class="floating-btn" id="openModalBtn">+</button>
 
-<!-- MODAL PARA AGREGAR DIRECCIÓN -->
+<!-- MODAL SIMPLIFICADO -->
 <div class="modal-overlay" id="addLocationModal">
     <div class="modal-content">
         <div class="modal-header">
@@ -695,9 +790,10 @@
         </div>
         
         <form id="locationForm">
+            <!-- PAÍS -->
             <div class="form-group">
                 <label class="form-label">País:</label>
-                <select class="form-input" id="locationCountry" onchange="updateFormForCountry(this.value)">
+                <select class="form-select" id="locationCountry">
                     <option value="HN">🇭🇳 Honduras</option>
                     <option value="SV">🇸🇻 El Salvador</option>
                     <option value="CR">🇨🇷 Costa Rica</option>
@@ -705,27 +801,31 @@
                 </select>
             </div>
             
+            <!-- COORDENADAS -->
             <div class="form-group">
                 <label class="form-label">Coordenadas (latitud, longitud):</label>
                 <input type="text" class="form-input" id="locationCoords" 
                        placeholder="Ej: 15.527522, -88.061812" required>
-                <small style="color: var(--granite); font-size: 12px; display: block; margin-top: 8px;">
-                    📌 En Google Maps: Haz clic derecho → "¿Qué hay aquí?" → Copia los números
-                </small>
+                <span class="form-help">
+                    En Google Maps: Haz clic derecho → "¿Qué hay aquí?" → Copia los números
+                </span>
             </div>
             
+            <!-- NOMBRE -->
             <div class="form-group">
                 <label class="form-label">Nombre del lugar:</label>
                 <input type="text" class="form-input" id="locationName" 
                        placeholder="Ej: Mi casa, Colonia Los Ángeles, Centro Comercial...">
-                <small style="color: var(--granite); font-size: 12px; display: block; margin-top: 8px;">
+                <span class="form-help">
                     Si no pones nombre, usaremos el detectado automáticamente
-                </small>
+                </span>
             </div>
             
+            <!-- TIPO (opcional) -->
             <div class="form-group">
-                <label class="form-label">Tipo de lugar:</label>
-                <select class="form-input" id="locationType">
+                <label class="form-label">Tipo de lugar (opcional):</label>
+                <select class="form-select" id="locationType">
+                    <option value="">Seleccionar tipo...</option>
                     <option value="colonia">Colonia</option>
                     <option value="barrio">Barrio</option>
                     <option value="aldea">Aldea</option>
@@ -733,18 +833,13 @@
                     <option value="municipio">Municipio</option>
                     <option value="ciudad">Ciudad</option>
                     <option value="punto_interes">Punto de Interés</option>
-                    <option value="casa">Casa</option>
-                    <option value="negocio">Negocio</option>
                 </select>
             </div>
             
-            <!-- CAMPOS DINÁMICOS POR PAÍS -->
-            <div id="dynamicFields"></div>
-            
-            <!-- INFORMACIÓN DETECTADA -->
+            <!-- INFORMACIÓN DETECTADA (se llena automáticamente) -->
             <div class="detected-info" id="detectedInfo" style="display: none;">
                 <div class="detected-card">
-                    <strong>🔍 Información detectada:</strong>
+                    <strong>✅ Información detectada:</strong>
                     <span id="detectedAddress">Cargando...</span>
                 </div>
             </div>
@@ -782,36 +877,28 @@
             emoji: '🇭🇳',
             code: 'hn',
             bounds: [-89.5, 12.0, -83.0, 17.0],
-            searchPrefix: 'Honduras',
-            levels: ['municipio', 'departamento'],
-            color: '#0E4BEF'
+            searchPrefix: 'Honduras'
         },
         'SV': {
             name: 'El Salvador',
             emoji: '🇸🇻',
             code: 'sv',
             bounds: [-90.0, 13.0, -87.5, 14.5],
-            searchPrefix: 'El Salvador',
-            levels: ['municipio', 'departamento'],
-            color: '#0E4BEF'
+            searchPrefix: 'El Salvador'
         },
         'CR': {
             name: 'Costa Rica',
             emoji: '🇨🇷',
             code: 'cr',
             bounds: [-86.0, 8.0, -82.5, 11.5],
-            searchPrefix: 'Costa Rica',
-            levels: ['canton', 'provincia', 'distrito'],
-            color: '#002B7F'
+            searchPrefix: 'Costa Rica'
         },
         'PA': {
             name: 'Panamá',
             emoji: '🇵🇦',
             code: 'pa',
             bounds: [-83.0, 7.0, -77.0, 10.0],
-            searchPrefix: 'Panamá',
-            levels: ['distrito', 'provincia', 'corregimiento'],
-            color: '#005293'
+            searchPrefix: 'Panamá'
         }
     };
 
@@ -822,6 +909,7 @@
     let localDatabase = {};
     let searchTimeout;
     let isSearching = false;
+    let detectedData = {};
 
     // ========== INICIALIZACIÓN ==========
     async function initializeApp() {
@@ -829,11 +917,10 @@
         createCountryFlags();
         await loadDatabaseFromGitHub();
         showEmptyState();
-        setupQuickFilters();
-        testBackendConnection();
+        updateQuickFilters();
+        setupEventListeners();
         
-        // Inicializar formulario
-        updateFormForCountry('HN');
+        console.log('🚀 Aplicación inicializada');
     }
 
     // ========== BANDERAS DE PAÍSES ==========
@@ -848,7 +935,6 @@
                      onclick="selectCountry('${code}')">
                     <div class="flag-emoji">${country.emoji}</div>
                     <div class="country-name">${country.name}</div>
-                    <div class="country-stats" id="stats-${code}">Cargando...</div>
                 </div>
             `;
             container.innerHTML += flagHTML;
@@ -871,10 +957,7 @@
         // Actualizar display
         updateCurrentCountryDisplay();
         
-        // Actualizar estadísticas
-        updateCountryStats();
-        
-        // Actualizar filtros rápidos
+        // Actualizar filtros
         updateQuickFilters();
         
         // Si hay búsqueda activa, ejecutarla de nuevo
@@ -892,89 +975,296 @@
         document.getElementById('currentCountryName').textContent = country.name;
     }
 
-    function updateCountryStats() {
-        Object.keys(COUNTRIES).forEach(code => {
-            const statsElement = document.getElementById(`stats-${code}`);
-            if (statsElement && localDatabase[code]) {
-                const count = Object.keys(localDatabase[code] || {}).length;
-                statsElement.textContent = `${count} ubicaciones`;
+    // ========== EVENT LISTENERS ==========
+    function setupEventListeners() {
+        // Búsqueda
+        document.getElementById('mainSearch').addEventListener('input', function(e) {
+            const query = e.target.value.trim();
+            clearTimeout(searchTimeout);
+            
+            if (query.length < 2) {
+                showEmptyState();
+                return;
             }
+            
+            searchTimeout = setTimeout(() => {
+                performSearch(query);
+            }, 400);
         });
+        
+        // Botón Maps
+        document.getElementById('openMapsBtn').addEventListener('click', function() {
+            const query = document.getElementById('mainSearch').value.trim();
+            const country = COUNTRIES[selectedCountry];
+            const searchQuery = query ? `${query} ${country.name}` : country.name;
+            const url = `https://www.google.com/maps/search/${encodeURIComponent(searchQuery)}`;
+            window.open(url, '_blank');
+        });
+        
+        // Modal
+        const modal = document.getElementById('addLocationModal');
+        const openBtn = document.getElementById('openModalBtn');
+        const closeBtn = document.getElementById('closeModalBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const form = document.getElementById('locationForm');
+        const detectBtn = document.getElementById('detectBtn');
+        
+        openBtn.addEventListener('click', () => {
+            modal.style.display = 'flex';
+            form.reset();
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('detectedInfo').style.display = 'none';
+            detectedData = {};
+        });
+        
+        closeBtn.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+        
+        // Detectar dirección
+        detectBtn.addEventListener('click', detectLocation);
+        
+        // Enviar formulario
+        form.addEventListener('submit', submitForm);
+    }
+    
+    function closeModal() {
+        document.getElementById('addLocationModal').style.display = 'none';
     }
 
-    // ========== CACHE ==========
-    function loadCacheFromStorage() {
+    // ========== DETECCIÓN DE UBICACIÓN - CORREGIDA ==========
+    async function detectLocation() {
+        const coordsInput = document.getElementById('locationCoords').value.trim();
+        
+        if (!coordsInput) {
+            alert('⚠️ Ingresa las coordenadas primero');
+            return;
+        }
+        
+        // Validar formato
+        const coords = coordsInput.split(',').map(c => c.trim());
+        if (coords.length !== 2 || isNaN(coords[0]) || isNaN(coords[1])) {
+            alert('❌ Formato inválido. Usa: latitud, longitud\nEj: 15.527522, -88.061812');
+            return;
+        }
+        
+        const lat = parseFloat(coords[0]);
+        const lon = parseFloat(coords[1]);
+        
+        // Mostrar carga
+        const detectedInfo = document.getElementById('detectedInfo');
+        detectedInfo.innerHTML = `
+            <div class="loading-detection">
+                <div class="loader-small"></div>
+                Detectando dirección...
+            </div>
+        `;
+        detectedInfo.style.display = 'block';
+        
         try {
-            const savedCache = localStorage.getItem('hnSearchCache');
-            if (savedCache) {
-                const parsed = JSON.parse(savedCache);
-                const now = Date.now();
-                
-                Object.entries(parsed).forEach(([key, data]) => {
-                    if (now - data.timestamp < CACHE_DURATION) {
-                        searchCache.set(key, data.results);
-                    }
-                });
+            // Usar Nominatim para reverse geocoding
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?` +
+                `lat=${lat}&lon=${lon}&` +
+                `format=json&addressdetails=1&zoom=16&accept-language=es`
+            );
+            
+            if (!response.ok) {
+                throw new Error('Error en la API');
             }
-        } catch (e) {
-            console.log("Error cargando cache:", e);
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            const address = data.address || {};
+            
+            // Extraer información relevante
+            let detectedText = '';
+            const extractedData = {
+                fullAddress: data.display_name,
+                placeName: data.display_name.split(',')[0] || 'Ubicación sin nombre'
+            };
+            
+            // Agregar información según lo disponible
+            if (address.road) {
+                detectedText += `<strong>Calle:</strong> ${address.road}<br>`;
+                extractedData.road = address.road;
+            }
+            
+            if (address.suburb || address.neighbourhood) {
+                detectedText += `<strong>Barrio/Colonia:</strong> ${address.suburb || address.neighbourhood}<br>`;
+                extractedData.area = address.suburb || address.neighbourhood;
+            }
+            
+            if (address.city || address.town || address.village) {
+                detectedText += `<strong>Ciudad/Pueblo:</strong> ${address.city || address.town || address.village}<br>`;
+                extractedData.city = address.city || address.town || address.village;
+            }
+            
+            if (address.state) {
+                detectedText += `<strong>Estado/Departamento:</strong> ${address.state}<br>`;
+                extractedData.state = address.state;
+            }
+            
+            if (address.country) {
+                detectedText += `<strong>País:</strong> ${address.country}`;
+                extractedData.country = address.country;
+            }
+            
+            if (!detectedText) {
+                detectedText = `<strong>Ubicación:</strong> ${data.display_name}`;
+            }
+            
+            // Guardar datos
+            detectedData = extractedData;
+            
+            // Actualizar interfaz
+            document.getElementById('detectedAddress').innerHTML = detectedText;
+            detectedInfo.innerHTML = `
+                <div class="detected-card">
+                    <strong>✅ Información detectada:</strong>
+                    <span id="detectedAddress">${detectedText}</span>
+                </div>
+            `;
+            
+            // Auto-completar nombre si está vacío
+            const nameInput = document.getElementById('locationName');
+            if (!nameInput.value.trim() && detectedData.placeName) {
+                nameInput.value = detectedData.placeName;
+            }
+            
+        } catch (error) {
+            console.error('Error en detección:', error);
+            
+            // Mostrar mensaje amigable
+            detectedInfo.innerHTML = `
+                <div class="detected-card">
+                    <strong>⚠️ Información limitada detectada</strong>
+                    <span>No se pudo obtener información detallada. Puedes:</span>
+                    <ul style="margin: 8px 0 0 20px; font-size: 11px;">
+                        <li>Completar manualmente el nombre</li>
+                        <li>Enviar igual para aprobación manual</li>
+                        <li>Intentar con otras coordenadas</li>
+                    </ul>
+                </div>
+            `;
+            
+            // Datos mínimos
+            detectedData = {
+                fullAddress: `Coordenadas: ${lat}, ${lon}`,
+                placeName: 'Ubicación por coordenadas'
+            };
         }
     }
 
-    function saveCacheToStorage() {
+    // ========== ENVÍO DE FORMULARIO ==========
+    async function submitForm(e) {
+        e.preventDefault();
+        
+        const submitBtn = document.getElementById('submitBtn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '⏳ Enviando...';
+        submitBtn.disabled = true;
+        
         try {
-            const cacheObj = {};
-            const now = Date.now();
+            const locationData = {
+                name: document.getElementById('locationName').value.trim(),
+                coords: document.getElementById('locationCoords').value.trim(),
+                type: document.getElementById('locationType').value || 'ubicacion',
+                pais: document.getElementById('locationCountry').value
+            };
             
-            searchCache.forEach((results, key) => {
-                cacheObj[key] = {
-                    results: results,
-                    timestamp: now
-                };
+            // Validar coordenadas
+            const coords = locationData.coords.split(',').map(c => c.trim());
+            if (coords.length !== 2 || isNaN(coords[0]) || isNaN(coords[1])) {
+                throw new Error('Formato de coordenadas inválido. Usa: latitud, longitud');
+            }
+            
+            // Si no hay nombre, usar el detectado o uno genérico
+            if (!locationData.name && detectedData.placeName) {
+                locationData.name = detectedData.placeName;
+            } else if (!locationData.name) {
+                locationData.name = 'Ubicación sin nombre';
+            }
+            
+            // Enviar al backend
+            const result = await sendToBackend(locationData);
+            
+            if (result.success) {
+                // Mostrar éxito
+                document.getElementById('successMessage').innerHTML = `
+                    ✅ <strong>Solicitud enviada</strong><br>
+                    <small style="font-size: 11px;">
+                        ID: ${result.data.request_id || 'N/A'}<br>
+                        Revisa Telegram para aprobar
+                    </small>
+                `;
+                document.getElementById('successMessage').style.display = 'block';
+                submitBtn.innerHTML = '✅ ¡Enviado!';
+                
+                // Cerrar después de 2 segundos
+                setTimeout(() => {
+                    closeModal();
+                    setTimeout(() => {
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    }, 300);
+                }, 2000);
+                
+            } else {
+                throw new Error(result.error || 'Error al enviar');
+            }
+            
+        } catch (error) {
+            alert('❌ Error: ' + error.message);
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    }
+
+    async function sendToBackend(locationData) {
+        try {
+            // Preparar datos finales
+            const finalData = {
+                name: locationData.name,
+                coords: locationData.coords,
+                type: locationData.type,
+                pais: locationData.pais,
+                detected: detectedData.fullAddress || 'No detectado automáticamente'
+            };
+            
+            console.log('📤 Enviando:', finalData);
+            
+            const response = await fetch(`${BACKEND_URL}/send-notification`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    location: finalData,
+                    telegram_chat_id: TELEGRAM_CHAT_ID
+                })
             });
             
-            localStorage.setItem('hnSearchCache', JSON.stringify(cacheObj));
-        } catch (e) {
-            console.log("Error guardando cache:", e);
-        }
-    }
-
-    // ========== BASE DE DATOS ==========
-    async function loadDatabaseFromGitHub() {
-        try {
-            const response = await fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/locations.json`);
             if (response.ok) {
-                const data = await response.json();
-                localDatabase = data;
-                console.log('✅ Base de datos cargada');
-                
-                // Actualizar estadísticas
-                setTimeout(updateCountryStats, 100);
-                updateCacheStatus();
+                const result = await response.json();
+                return {success: true, data: result};
             } else {
-                console.warn('⚠️ No se pudo cargar la base de datos de GitHub');
-                initializeEmptyDatabase();
+                const errorText = await response.text();
+                return {success: false, error: `Error ${response.status}`};
             }
+            
         } catch (error) {
-            console.error('❌ Error cargando base de datos:', error);
-            initializeEmptyDatabase();
+            console.error('❌ Error:', error);
+            return {success: false, error: error.message};
         }
-    }
-
-    function initializeEmptyDatabase() {
-        localDatabase = {};
-        Object.keys(COUNTRIES).forEach(country => {
-            localDatabase[country] = {};
-        });
-    }
-
-    function updateCacheStatus() {
-        const totalLocations = Object.keys(localDatabase).reduce((sum, country) => {
-            return sum + Object.keys(localDatabase[country] || {}).length;
-        }, 0);
-        
-        document.getElementById('cacheStatus').textContent = 
-            `${searchCache.size} búsquedas en cache • ${totalLocations} ubicaciones`;
     }
 
     // ========== BÚSQUEDA ==========
@@ -995,12 +1285,8 @@
         }
         
         Object.entries(localDatabase[selectedCountry]).forEach(([key, location]) => {
-            const locationName = location.name || '';
             if (key.includes(normalized) || 
-                locationName.toLowerCase().includes(normalized) ||
-                (location.municipio && location.municipio.toLowerCase().includes(normalized)) ||
-                (location.departamento && location.departamento.toLowerCase().includes(normalized))) {
-                
+                (location.name && location.name.toLowerCase().includes(normalized))) {
                 results.push({
                     ...location,
                     source: 'official',
@@ -1024,9 +1310,9 @@
             
             const response = await fetch(
                 `https://nominatim.openstreetmap.org/search?` +
-                `q=${encodeURIComponent(query)}` +
-                `&format=json&addressdetails=1&limit=20&countrycodes=${country.code}` +
-                `&dedupe=1&bounded=1&viewbox=${country.bounds.join(',')}`
+                `q=${encodeURIComponent(query + ' ' + country.name)}` +
+                `&format=json&addressdetails=1&limit=15&countrycodes=${country.code}` +
+                `&dedupe=1`
             );
             
             if (!response.ok) throw new Error('API Error');
@@ -1049,64 +1335,22 @@
         return data.map(item => {
             const address = item.address || {};
             
-            // Detectar tipo
-            let type = 'ubicación';
-            if (item.type === 'administrative') {
-                if (address.city || address.town) type = 'municipio';
-                else if (address.state) type = 'departamento/provincia';
-            } else if (address.suburb) {
-                type = address.suburb.includes('Colonia') ? 'colonia' : 'barrio';
-            } else if (address.village) {
-                type = 'aldea';
-            } else if (address.hamlet) {
-                type = 'caserío';
-            }
-            
-            // Crear resultado base
-            const result = {
+            return {
                 name: item.display_name.split(',')[0],
-                type: type,
+                type: item.type || 'ubicación',
                 lat: parseFloat(item.lat),
                 lon: parseFloat(item.lon),
                 full_address: item.display_name,
                 source: 'api',
                 importance: item.importance || 0,
                 pais: selectedCountry,
-                country_emoji: COUNTRIES[selectedCountry].emoji
+                country_emoji: COUNTRIES[selectedCountry].emoji,
+                // Info adicional si está disponible
+                municipio: address.city || address.town || address.village || '',
+                departamento: address.state || address.county || ''
             };
-            
-            // Campos específicos por país
-            if (selectedCountry === 'HN' || selectedCountry === 'SV') {
-                result.municipio = address.city || address.town || address.municipality || '';
-                result.departamento = address.state || address.county || '';
-            } else if (selectedCountry === 'CR') {
-                result.canton = address.city || address.town || address.municipality || '';
-                result.provincia = address.state || address.county || '';
-                result.distrito = address.suburb || address.neighbourhood || '';
-            } else if (selectedCountry === 'PA') {
-                result.distrito = address.city || address.town || address.municipality || '';
-                result.provincia = address.state || address.county || '';
-                result.corregimiento = address.suburb || address.neighbourhood || '';
-            }
-            
-            return result;
         });
     }
-
-    // ========== EVENTOS DE BÚSQUEDA ==========
-    document.getElementById('mainSearch').addEventListener('input', function(e) {
-        const query = e.target.value.trim();
-        clearTimeout(searchTimeout);
-        
-        if (query.length < 2) {
-            showEmptyState();
-            return;
-        }
-        
-        searchTimeout = setTimeout(() => {
-            performSearch(query);
-        }, 400);
-    });
 
     async function performSearch(query) {
         if (isSearching) return;
@@ -1122,15 +1366,14 @@
             
             displayResults(uniqueResults);
             
-            // Actualizar estadísticas
+            // Estadísticas
             document.getElementById('resultsStats').innerHTML = `
-                Mostrando ${uniqueResults.length} resultados en ${COUNTRIES[selectedCountry].name}<br>
-                <small>⚡ = oficial (${localResults.length}) • 🌐 = online (${apiResults.length})</small>
+                ${uniqueResults.length} resultados en ${COUNTRIES[selectedCountry].name}
             `;
             document.getElementById('resultsStats').style.display = 'block';
             
         } catch (error) {
-            console.error('Error en búsqueda:', error);
+            console.error('Error:', error);
             showError();
         } finally {
             isSearching = false;
@@ -1139,17 +1382,12 @@
 
     function removeDuplicates(results) {
         const seen = new Set();
-        const unique = [];
-        
-        results.forEach(item => {
+        return results.filter(item => {
             const key = `${normalizeQuery(item.name)}_${item.lat.toFixed(4)}_${item.lon.toFixed(4)}`;
-            if (!seen.has(key)) {
-                seen.add(key);
-                unique.push(item);
-            }
-        });
-        
-        return unique.sort((a, b) => {
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        }).sort((a, b) => {
             const aScore = (a.source === 'official' ? 100 : 0) + (a.importance || 0);
             const bScore = (b.source === 'official' ? 100 : 0) + (b.importance || 0);
             return bScore - aScore;
@@ -1171,9 +1409,6 @@
             <div class="no-results">
                 <div class="no-results-icon">🔍</div>
                 <p>Escribe para buscar en ${COUNTRIES[selectedCountry].name}</p>
-                <p style="font-size: 12px; color: var(--soft-mint); margin-top: 10px;">
-                    Busca colonias, barrios, municipios o ciudades
-                </p>
             </div>
         `;
         document.getElementById('resultsStats').style.display = 'none';
@@ -1184,8 +1419,8 @@
             <div class="no-results">
                 <div class="no-results-icon">⚠️</div>
                 <p>Error en la búsqueda</p>
-                <p style="font-size: 12px; color: var(--soft-mint); margin-top: 10px;">
-                    Intenta nuevamente o verifica tu conexión
+                <p style="font-size: 11px; color: var(--soft-mint); margin-top: 8px;">
+                    Intenta nuevamente
                 </p>
             </div>
         `;
@@ -1199,9 +1434,6 @@
                 <div class="no-results">
                     <div class="no-results-icon">🤔</div>
                     <p>No se encontraron resultados</p>
-                    <p style="font-size: 12px; color: var(--soft-mint); margin-top: 10px;">
-                        Intenta con otros términos o agrega esta ubicación
-                    </p>
                 </div>
             `;
             return;
@@ -1209,7 +1441,7 @@
         
         let html = '';
         
-        results.forEach((location, index) => {
+        results.forEach(location => {
             const mapUrl = `https://www.google.com/maps?q=${location.lat},${location.lon}`;
             
             html += `
@@ -1224,38 +1456,26 @@
                     
                     <span class="place-name">
                         ${location.name}
-                        ${location.source === 'official' ? '<span style="color: var(--success); margin-left: 8px;">⚡</span>' : '<span style="color: var(--blue-sky); margin-left: 8px;">🌐</span>'}
+                        ${location.source === 'official' ? '<span style="color: var(--success); margin-left: 6px;">⚡</span>' : ''}
                     </span>
                     
-                    <div class="location-hierarchy">
-                        ${location.municipio ? `
-                            <div class="hierarchy-item">
-                                <span class="hierarchy-label">Municipio:</span>
-                                <span class="hierarchy-value">${location.municipio}</span>
-                            </div>
-                        ` : ''}
-                        
-                        ${location.departamento ? `
-                            <div class="hierarchy-item">
-                                <span class="hierarchy-label">Departamento:</span>
-                                <span class="hierarchy-value">${location.departamento}</span>
-                            </div>
-                        ` : ''}
-                        
-                        ${location.canton ? `
-                            <div class="hierarchy-item">
-                                <span class="hierarchy-label">Cantón:</span>
-                                <span class="hierarchy-value">${location.canton}</span>
-                            </div>
-                        ` : ''}
-                        
-                        ${location.provincia ? `
-                            <div class="hierarchy-item">
-                                <span class="hierarchy-label">Provincia:</span>
-                                <span class="hierarchy-value">${location.provincia}</span>
-                            </div>
-                        ` : ''}
-                    </div>
+                    ${location.municipio || location.departamento ? `
+                        <div class="location-hierarchy">
+                            ${location.municipio ? `
+                                <div class="hierarchy-item">
+                                    <span class="hierarchy-label">Municipio:</span>
+                                    <span class="hierarchy-value">${location.municipio}</span>
+                                </div>
+                            ` : ''}
+                            
+                            ${location.departamento ? `
+                                <div class="hierarchy-item">
+                                    <span class="hierarchy-label">Departamento:</span>
+                                    <span class="hierarchy-value">${location.departamento}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    ` : ''}
                     
                     <div class="coordinates-row">
                         <span class="coords-display">
@@ -1265,7 +1485,7 @@
                         <div class="action-buttons">
                             <button class="btn-action btn-map" 
                                     onclick="event.stopPropagation(); window.open('${mapUrl}', '_blank')">
-                                🗺️ Ver en Maps
+                                🗺️ Maps
                             </button>
                             <button class="btn-action btn-copy" 
                                     onclick="event.stopPropagation(); copyCoords(${location.lat}, ${location.lon}, this)">
@@ -1290,7 +1510,7 @@
             setTimeout(() => {
                 button.innerHTML = originalText;
                 button.classList.remove('success');
-            }, 2000);
+            }, 1500);
         });
     }
 
@@ -1299,31 +1519,23 @@
         const filtersByCountry = {
             'HN': [
                 {text: "Colonias", search: "Colonia"},
-                {text: "Barrios", search: "Barrio"},
                 {text: "Tegucigalpa", search: "Tegucigalpa"},
-                {text: "San Pedro Sula", search: "San Pedro Sula"},
-                {text: "La Ceiba", search: "La Ceiba"}
+                {text: "SPS", search: "San Pedro Sula"}
             ],
             'SV': [
                 {text: "San Salvador", search: "San Salvador"},
                 {text: "Santa Ana", search: "Santa Ana"},
-                {text: "Soyapango", search: "Soyapango"},
-                {text: "Mejicanos", search: "Mejicanos"},
-                {text: "Colonias", search: "Colonia"}
+                {text: "Soyapango", search: "Soyapango"}
             ],
             'CR': [
                 {text: "San José", search: "San José"},
                 {text: "Alajuela", search: "Alajuela"},
-                {text: "Heredia", search: "Heredia"},
-                {text: "Cartago", search: "Cartago"},
-                {text: "Barrios", search: "Barrio"}
+                {text: "Heredia", search: "Heredia"}
             ],
             'PA': [
-                {text: "Ciudad Panamá", search: "Panamá"},
+                {text: "Panamá", search: "Panamá"},
                 {text: "Colón", search: "Colón"},
-                {text: "David", search: "David"},
-                {text: "Santiago", search: "Santiago"},
-                {text: "Corregimientos", search: "corregimiento"}
+                {text: "David", search: "David"}
             ]
         };
         
@@ -1344,396 +1556,92 @@
         });
     }
 
-    // ========== FORMULARIO ==========
-    let detectedData = {};
-
-    function updateFormForCountry(countryCode) {
-        const container = document.getElementById('dynamicFields');
-        
-        let fieldsHTML = '';
-        
-        if (countryCode === 'HN' || countryCode === 'SV') {
-            fieldsHTML = `
-                <div class="form-group">
-                    <label class="form-label">Departamento:</label>
-                    <input type="text" class="form-input" id="locationDepartamento" 
-                           placeholder="Ej: ${countryCode === 'HN' ? 'Francisco Morazán' : 'San Salvador'}">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Municipio:</label>
-                    <input type="text" class="form-input" id="locationMunicipio" 
-                           placeholder="Ej: ${countryCode === 'HN' ? 'Tegucigalpa' : 'San Salvador'}">
-                </div>
-            `;
-        } else if (countryCode === 'CR') {
-            fieldsHTML = `
-                <div class="form-group">
-                    <label class="form-label">Provincia:</label>
-                    <input type="text" class="form-input" id="locationProvincia" 
-                           placeholder="Ej: San José">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Cantón:</label>
-                    <input type="text" class="form-input" id="locationCanton" 
-                           placeholder="Ej: San José">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Distrito:</label>
-                    <input type="text" class="form-input" id="locationDistrito" 
-                           placeholder="Ej: Carmen">
-                </div>
-            `;
-        } else if (countryCode === 'PA') {
-            fieldsHTML = `
-                <div class="form-group">
-                    <label class="form-label">Provincia:</label>
-                    <input type="text" class="form-input" id="locationProvincia" 
-                           placeholder="Ej: Panamá">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Distrito:</label>
-                    <input type="text" class="form-input" id="locationDistrito" 
-                           placeholder="Ej: Panamá">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Corregimiento:</label>
-                    <input type="text" class="form-input" id="locationCorregimiento" 
-                           placeholder="Ej: Bella Vista">
-                </div>
-            `;
+    // ========== CACHE ==========
+    function loadCacheFromStorage() {
+        try {
+            const savedCache = localStorage.getItem('caSearchCache');
+            if (savedCache) {
+                const parsed = JSON.parse(savedCache);
+                const now = Date.now();
+                
+                Object.entries(parsed).forEach(([key, data]) => {
+                    if (now - data.timestamp < CACHE_DURATION) {
+                        searchCache.set(key, data.results);
+                    }
+                });
+            }
+        } catch (e) {
+            console.log("Error cache:", e);
         }
-        
-        container.innerHTML = fieldsHTML;
     }
 
-    // ========== MODAL ==========
-    const modal = document.getElementById('addLocationModal');
-    const openBtn = document.getElementById('openModalBtn');
-    const closeBtn = document.getElementById('closeModalBtn');
-    const cancelBtn = document.getElementById('cancelBtn');
-    const form = document.getElementById('locationForm');
-    const successMessage = document.getElementById('successMessage');
-    const detectBtn = document.getElementById('detectBtn');
-    const detectedInfo = document.getElementById('detectedInfo');
-
-    openBtn.addEventListener('click', () => {
-        modal.style.display = 'flex';
-        form.reset();
-        successMessage.style.display = 'none';
-        detectedInfo.style.display = 'none';
-        detectedData = {};
-    });
-
-    closeBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
-
-    cancelBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
-
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
-
-    // ========== DETECCIÓN AUTOMÁTICA ==========
-    detectBtn.addEventListener('click', async () => {
-        const coordsInput = document.getElementById('locationCoords').value.trim();
-        const countryCode = document.getElementById('locationCountry').value;
-        
-        if (!coordsInput) {
-            alert('⚠️ Ingresa las coordenadas primero');
-            return;
-        }
-        
-        const coords = coordsInput.split(',').map(c => c.trim());
-        if (coords.length !== 2 || isNaN(coords[0]) || isNaN(coords[1])) {
-            alert('❌ Formato inválido. Usa: latitud, longitud');
-            return;
-        }
-        
-        const lat = parseFloat(coords[0]);
-        const lon = parseFloat(coords[1]);
-        
-        // Mostrar carga
-        detectedInfo.innerHTML = `
-            <div class="loading-detection">
-                <div class="loader-small"></div>
-                Detectando dirección...
-            </div>
-        `;
-        detectedInfo.style.display = 'block';
-        
+    function saveCacheToStorage() {
         try {
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?` +
-                `lat=${lat}&lon=${lon}&` +
-                `format=json&addressdetails=1&zoom=18&accept-language=es`
-            );
+            const cacheObj = {};
+            const now = Date.now();
             
-            if (!response.ok) throw new Error('Error en la API');
-            
-            const data = await response.json();
-            const address = data.address || {};
-            
-            // Detectar municipio/provincia según país
-            let detectedText = '';
-            
-            if (countryCode === 'HN' || countryCode === 'SV') {
-                const municipio = address.city || address.town || address.village || address.municipality || '';
-                const departamento = address.state || address.county || '';
-                
-                detectedData = {
-                    municipio: municipio,
-                    departamento: departamento,
-                    fullAddress: data.display_name,
-                    placeName: data.display_name.split(',')[0]
+            searchCache.forEach((results, key) => {
+                cacheObj[key] = {
+                    results: results,
+                    timestamp: now
                 };
-                
-                detectedText = `
-                    <strong>Municipio:</strong> ${municipio || 'No detectado'}<br>
-                    <strong>Departamento:</strong> ${departamento || 'No detectado'}
-                `;
-                
-                // Auto-completar campos
-                if (document.getElementById('locationMunicipio')) {
-                    document.getElementById('locationMunicipio').value = municipio || '';
-                }
-                if (document.getElementById('locationDepartamento')) {
-                    document.getElementById('locationDepartamento').value = departamento || '';
-                }
-                
-            } else if (countryCode === 'CR') {
-                const provincia = address.state || address.county || '';
-                const canton = address.city || address.town || address.municipality || '';
-                const distrito = address.suburb || address.neighbourhood || '';
-                
-                detectedData = {
-                    provincia: provincia,
-                    canton: canton,
-                    distrito: distrito,
-                    fullAddress: data.display_name,
-                    placeName: data.display_name.split(',')[0]
-                };
-                
-                detectedText = `
-                    <strong>Provincia:</strong> ${provincia || 'No detectado'}<br>
-                    <strong>Cantón:</strong> ${canton || 'No detectado'}<br>
-                    <strong>Distrito:</strong> ${distrito || 'No detectado'}
-                `;
-                
-                // Auto-completar campos
-                if (document.getElementById('locationProvincia')) {
-                    document.getElementById('locationProvincia').value = provincia || '';
-                }
-                if (document.getElementById('locationCanton')) {
-                    document.getElementById('locationCanton').value = canton || '';
-                }
-                if (document.getElementById('locationDistrito')) {
-                    document.getElementById('locationDistrito').value = distrito || '';
-                }
-                
-            } else if (countryCode === 'PA') {
-                const provincia = address.state || address.county || '';
-                const distrito = address.city || address.town || address.municipality || '';
-                const corregimiento = address.suburb || address.neighbourhood || '';
-                
-                detectedData = {
-                    provincia: provincia,
-                    distrito: distrito,
-                    corregimiento: corregimiento,
-                    fullAddress: data.display_name,
-                    placeName: data.display_name.split(',')[0]
-                };
-                
-                detectedText = `
-                    <strong>Provincia:</strong> ${provincia || 'No detectado'}<br>
-                    <strong>Distrito:</strong> ${distrito || 'No detectado'}<br>
-                    <strong>Corregimiento:</strong> ${corregimiento || 'No detectado'}
-                `;
-                
-                // Auto-completar campos
-                if (document.getElementById('locationProvincia')) {
-                    document.getElementById('locationProvincia').value = provincia || '';
-                }
-                if (document.getElementById('locationDistrito')) {
-                    document.getElementById('locationDistrito').value = distrito || '';
-                }
-                if (document.getElementById('locationCorregimiento')) {
-                    document.getElementById('locationCorregimiento').value = corregimiento || '';
-                }
-            }
-            
-            // Auto-completar nombre si está vacío
-            const nameInput = document.getElementById('locationName');
-            if (!nameInput.value.trim() && detectedData.placeName) {
-                nameInput.value = detectedData.placeName;
-            }
-            
-            // Actualizar interfaz
-            document.getElementById('detectedAddress').innerHTML = detectedText;
-            detectedInfo.innerHTML = `
-                <div class="detected-card">
-                    <strong>✅ Dirección detectada:</strong>
-                    <span id="detectedAddress">${detectedText}</span>
-                </div>
-            `;
-            
-        } catch (error) {
-            console.error('Error en detección:', error);
-            detectedInfo.innerHTML = `
-                <div class="detected-card">
-                    <strong>⚠️ No se pudo detectar automáticamente</strong>
-                    <span>Puedes completar los campos manualmente y enviar la solicitud.</span>
-                </div>
-            `;
-            detectedData = {
-                fullAddress: 'Dirección no detectada automáticamente',
-                placeName: 'Ubicación sin nombre'
-            };
-        }
-    });
-
-    // ========== ENVÍO AL BACKEND ==========
-    async function sendToBackend(locationData) {
-        console.log('📤 Enviando datos:', locationData);
-        
-        try {
-            const finalData = {
-                name: locationData.name || detectedData.placeName || 'Ubicación sin nombre',
-                coords: locationData.coords,
-                type: locationData.type,
-                pais: locationData.pais,
-                detected: detectedData.fullAddress || 'No detectado'
-            };
-            
-            // Agregar campos específicos
-            if (locationData.pais === 'HN' || locationData.pais === 'SV') {
-                finalData.municipio = document.getElementById('locationMunicipio')?.value || detectedData.municipio || '';
-                finalData.departamento = document.getElementById('locationDepartamento')?.value || detectedData.departamento || '';
-            } else if (locationData.pais === 'CR') {
-                finalData.provincia = document.getElementById('locationProvincia')?.value || detectedData.provincia || '';
-                finalData.canton = document.getElementById('locationCanton')?.value || detectedData.canton || '';
-                finalData.distrito = document.getElementById('locationDistrito')?.value || detectedData.distrito || '';
-            } else if (locationData.pais === 'PA') {
-                finalData.provincia = document.getElementById('locationProvincia')?.value || detectedData.provincia || '';
-                finalData.distrito = document.getElementById('locationDistrito')?.value || detectedData.distrito || '';
-                finalData.corregimiento = document.getElementById('locationCorregimiento')?.value || detectedData.corregimiento || '';
-            }
-            
-            const response = await fetch(`${BACKEND_URL}/send-notification`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    location: finalData,
-                    telegram_chat_id: TELEGRAM_CHAT_ID
-                })
             });
             
-            if (response.ok) {
-                const result = await response.json();
-                return {success: true, data: result};
-            } else {
-                const errorText = await response.text();
-                return {success: false, error: `Error ${response.status}: ${errorText}`};
-            }
-            
-        } catch (error) {
-            console.error('❌ Error enviando:', error);
-            return {success: false, error: error.message};
+            localStorage.setItem('caSearchCache', JSON.stringify(cacheObj));
+        } catch (e) {
+            console.log("Error guardando cache:", e);
         }
     }
 
-    // ========== ENVÍO DEL FORMULARIO ==========
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const submitBtn = document.getElementById('submitBtn');
-        const originalText = submitBtn.innerHTML;
-        submitBtn.innerHTML = '⏳ Enviando...';
-        submitBtn.disabled = true;
-        
+    // ========== BASE DE DATOS ==========
+    async function loadDatabaseFromGitHub() {
         try {
-            const locationData = {
-                name: document.getElementById('locationName').value.trim(),
-                coords: document.getElementById('locationCoords').value.trim(),
-                type: document.getElementById('locationType').value,
-                pais: document.getElementById('locationCountry').value
-            };
-            
-            // Validar coordenadas
-            const coords = locationData.coords.split(',').map(c => c.trim());
-            if (coords.length !== 2 || isNaN(coords[0]) || isNaN(coords[1])) {
-                throw new Error('Formato de coordenadas inválido. Usa: lat, lon');
-            }
-            
-            // Enviar al backend
-            const result = await sendToBackend(locationData);
-            
-            if (result.success) {
-                successMessage.innerHTML = `
-                    ✅ <strong>Solicitud enviada exitosamente</strong><br>
-                    <small style="font-size: 12px;">
-                        ID: ${result.data.request_id || 'N/A'}<br>
-                        Revisa tu Telegram para aprobar o rechazar
-                    </small>
-                `;
-                successMessage.style.display = 'block';
-                submitBtn.innerHTML = '✅ ¡Enviado!';
-                
-                setTimeout(() => {
-                    modal.style.display = 'none';
-                    form.reset();
-                    detectedInfo.style.display = 'none';
-                    detectedData = {};
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
-                    updateFormForCountry('HN');
-                }, 3000);
-                
-            } else {
-                throw new Error(result.error || 'No se pudo enviar');
-            }
-            
-        } catch (error) {
-            alert('❌ Error: ' + error.message);
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
-        }
-    });
-
-    // ========== FUNCIONES AUXILIARES ==========
-    async function testBackendConnection() {
-        try {
-            const response = await fetch(`${BACKEND_URL}/health`);
+            const response = await fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/locations.json`);
             if (response.ok) {
-                console.log('✅ Backend conectado');
+                const data = await response.json();
+                localDatabase = data;
+                updateCacheStatus();
+            } else {
+                initializeEmptyDatabase();
             }
         } catch (error) {
-            console.warn('⚠️ Backend no disponible');
+            console.error('Error BD:', error);
+            initializeEmptyDatabase();
         }
     }
 
-    function refreshDatabase() {
-        loadDatabaseFromGitHub();
-        alert('✅ Base de datos actualizada');
+    function initializeEmptyDatabase() {
+        localDatabase = {};
+        Object.keys(COUNTRIES).forEach(country => {
+            localDatabase[country] = {};
+        });
     }
 
-    // ========== INICIALIZAR ==========
-    initializeApp();
-    
-    // Hacer funciones accesibles globalmente
+    function updateCacheStatus() {
+        let totalLocations = 0;
+        Object.keys(localDatabase).forEach(country => {
+            totalLocations += Object.keys(localDatabase[country] || {}).length;
+        });
+        
+        document.getElementById('cacheStatus').textContent = 
+            `${searchCache.size} cache • ${totalLocations} loc`;
+    }
+
+    // ========== FUNCIONES GLOBALES ==========
     window.selectCountry = selectCountry;
     window.copyCoords = copyCoords;
-    window.refreshDatabase = refreshDatabase;
-    window.updateFormForCountry = updateFormForCountry;
     
-    console.log('🚀 Aplicación inicializada');
+    window.refreshDatabase = async function() {
+        await loadDatabaseFromGitHub();
+        const currentQuery = document.getElementById('mainSearch').value.trim();
+        if (currentQuery.length >= 2) {
+            performSearch(currentQuery);
+        }
+        alert('✅ Base actualizada');
+    };
+
+    // ========== INICIAR ==========
+    initializeApp();
 </script>
 </body>
 </html>
