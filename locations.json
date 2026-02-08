@@ -86,5 +86,18 @@
     "source": "user_submission",
     "detected_automatically": true,
     "full_address": "Pasaje 32, San Pedro Sula, Cortés, 21103, Honduras"
+  },
+  "el_escalon": {
+    "name": "El Escalon",
+    "lat": 13.707825528574666,
+    "lon": -89.24227346677688,
+    "municipio": "San Salvador",
+    "departamento": "San Salvador",
+    "type": "colonia",
+    "added": "2026-02-08T01:26:24.561964",
+    "approved": true,
+    "source": "user_submission",
+    "detected_automatically": true,
+    "full_address": "Dirección no detectada automáticamente"
   }
 }
