@@ -73,5 +73,18 @@
     "source": "user_submission",
     "detected_automatically": true,
     "full_address": "5a Calle SE, San Pedro Sula, Cortés, 21104, Honduras"
+  },
+  "colonia_satelite": {
+    "name": "Colonia Satelite",
+    "lat": 15.48996848599614,
+    "lon": -87.98832721896284,
+    "municipio": "San Pedro Sula",
+    "departamento": "Cortés",
+    "type": "colonia",
+    "added": "2026-02-08T00:18:57.434181",
+    "approved": true,
+    "source": "user_submission",
+    "detected_automatically": true,
+    "full_address": "Pasaje 32, San Pedro Sula, Cortés, 21103, Honduras"
   }
 }
